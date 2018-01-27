@@ -30,18 +30,18 @@ namespace util {
 		return DirectX::XMVectorSet(-v.x, -v.y, v.z, v.w);
 	}
 
-	double Length(Vector4 v)
+	float Length(Vector4 v)
 	{
 		return sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
 	}
 
 	Vector4 Normalize(Vector4 v)
 	{
-		double length = Length(v);
+		float length = Length(v);
 		return VECTOR4(v.x / length, v.y / length, v.z / length);
 	}
 
-	Vector4 ScalarMultiplication(Vector4 v, double s)
+	Vector4 ScalarMultiplication(Vector4 v, float s)
 	{
 		return VECTOR4(v.x * s, v.y * s, v.z * s, 1);
 	}
@@ -54,7 +54,7 @@ namespace util {
 
 		if (q.w > 1) q = Normalize(q);
 		float angle = 2 * acos(q.w);
-		double s = sqrt(1 - q.w*q.w);
+		float s = sqrt(1 - q.w*q.w);
 
 		if (s < 0.001)
 			v = VECTOR4(q.x, q.y, q.z);
@@ -103,7 +103,7 @@ namespace util {
 
 	std::vector<byte> readShaderFromCSO(const std::wstring& filename)
 	{
-		std::wifstream file(filename, std::ios::in | std::ios::binary);
+		std::ifstream file(filename, std::ios::in | std::ios::binary);
 		if (!file)
 		{
 			MessageBoxW(NULL, (std::wstring(L"Could not open ") + filename).c_str(), L"File error", MB_ICONERROR | MB_OK);
@@ -121,12 +121,12 @@ namespace util {
 
 		// reserve capacity
 		std::vector<byte> v;
-		v.reserve(filesize);
+		v.reserve((unsigned int)filesize);
 
 		// read the data:
 		v.insert(v.begin(),
-			std::istream_iterator<byte, wchar_t>(file),
-			std::istream_iterator<byte, wchar_t>());
+			std::istream_iterator<byte>(file),
+			std::istream_iterator<byte>());
 
 		return v;
 	}

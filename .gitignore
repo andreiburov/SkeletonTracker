@@ -7,6 +7,9 @@
 Joints/
 Rotations/
 
+# Compiled Shader Object
+*.cso
+
 # User-specific files
 *.suo
 *.user

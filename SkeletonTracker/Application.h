@@ -70,6 +70,7 @@ private:
 	IDXGISwapChain*          m_pSwapChain = nullptr;
 	IDXGISwapChain1*         m_pSwapChain1 = nullptr;
 	ID3D11RenderTargetView*  m_pRenderTargetView = nullptr;
+	ID3D11DepthStencilView*  m_pDepthStencilView = nullptr;
 
 	HANDLE                   m_hNextSkeletonEvent;
 

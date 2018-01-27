@@ -122,6 +122,7 @@ int Application::Run(HINSTANCE hInstance, int nCmdShow)
 		}
 	}
 
+	m_SimpleModel.Clear();
 	CleanupDevice();
 
 	return static_cast<int>(msg.wParam);
@@ -203,6 +204,9 @@ LRESULT CALLBACK Application::DlgProc(HWND hWnd, UINT message, WPARAM wParam, LP
 
 		// Look for a connected Kinect, and create it if found
 		CreateFirstConnected();
+
+		// Create Simple Model
+		m_SimpleModel.Create(m_pd3dDevice, L"ModelFile", L"VertexShader.cso", L"PixelShader.cso");
 	}
 	break;
 
@@ -538,6 +542,47 @@ HRESULT Application::InitDevice()
 	if (FAILED(hr))
 		return hr;
 
+	// Once the render target view is created, create a depth stencil view.  This
+	// allows Direct3D to efficiently render objects closer to the camera in front
+	// of objects further from the camera.
+
+	/*D3D11_TEXTURE2D_DESC backBufferDesc = { 0 };
+	backBuffer->GetDesc(&backBufferDesc);
+
+	D3D11_TEXTURE2D_DESC depthStencilDesc;
+	depthStencilDesc.Width = backBufferDesc.Width;
+	depthStencilDesc.Height = backBufferDesc.Height;
+	depthStencilDesc.MipLevels = 1;
+	depthStencilDesc.ArraySize = 1;
+	depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthStencilDesc.SampleDesc.Count = 1;
+	depthStencilDesc.SampleDesc.Quality = 0;
+	depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
+	depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	depthStencilDesc.CPUAccessFlags = 0;
+	depthStencilDesc.MiscFlags = 0;
+	ComPtr<ID3D11Texture2D> depthStencil;
+	DX::ThrowIfFailed(
+		m_d3dDevice->CreateTexture2D(
+			&depthStencilDesc,
+			nullptr,
+			&depthStencil
+		)
+	);
+
+	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
+	depthStencilViewDesc.Format = depthStencilDesc.Format;
+	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	depthStencilViewDesc.Flags = 0;
+	depthStencilViewDesc.Texture2D.MipSlice = 0;
+	DX::ThrowIfFailed(
+		m_d3dDevice->CreateDepthStencilView(
+			depthStencil.Get(),
+			&depthStencilViewDesc,
+			&m_depthStencilView
+		)
+	);*/
+
 	m_pImmediateContext->OMSetRenderTargets(1, &m_pRenderTargetView, nullptr);
 
 	// Setup the viewport
@@ -559,9 +604,16 @@ HRESULT Application::InitDevice()
 //--------------------------------------------------------------------------------------
 void Application::RenderSimpleModel()
 {
+	// Specify the render target and depth stencil we created as the output target.
+	//m_pImmediateContext->OMSetRenderTargets(1, &m_pRenderTargetView, m_pDepthStencilView);
+
 	// Just clear the backbuffer
 	m_pImmediateContext->ClearRenderTargetView(m_pRenderTargetView, DirectX::Colors::MidnightBlue);
-	m_pSwapChain->Present(0, 0);
+	//m_pImmediateContext->ClearDepthStencilView(m_pDepthStencilView,	D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+	m_SimpleModel.Render(m_pImmediateContext);
+
+	m_pSwapChain->Present(1, 0);
 }
 
 
