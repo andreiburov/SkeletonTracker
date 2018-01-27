@@ -3,6 +3,7 @@
 #include "resource.h"
 #include "KinectSkeleton.h"
 #include "SimpleSkeleton.h"
+#include "SimpleModel.h"
 
 class Application
 {
@@ -74,6 +75,7 @@ private:
 
 	KinectSkeleton			 m_KinectSkeleton;
 	SimpleSkeleton			 m_SimpleSkeleton;
+	SimpleModel				 m_SimpleModel;
 
 	/// <summary>
 	/// Create the first connected Kinect found 

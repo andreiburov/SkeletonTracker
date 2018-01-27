@@ -101,4 +101,34 @@ namespace util {
 		return *this;
 	}
 
+	std::vector<byte> readShaderFromCSO(const std::wstring& filename)
+	{
+		std::wifstream file(filename, std::ios::in | std::ios::binary);
+		if (!file)
+		{
+			MessageBoxW(NULL, (std::wstring(L"Could not open ") + filename).c_str(), L"File error", MB_ICONERROR | MB_OK);
+		}
+
+		// Stop eating new lines in binary mode!!!
+		file.unsetf(std::ios::skipws);
+
+		// get its size:
+		std::streampos filesize;
+
+		file.seekg(0, std::ios::end);
+		filesize = file.tellg();
+		file.seekg(0, std::ios::beg);
+
+		// reserve capacity
+		std::vector<byte> v;
+		v.reserve(filesize);
+
+		// read the data:
+		v.insert(v.begin(),
+			std::istream_iterator<byte, wchar_t>(file),
+			std::istream_iterator<byte, wchar_t>());
+
+		return v;
+	}
+
 } // util
