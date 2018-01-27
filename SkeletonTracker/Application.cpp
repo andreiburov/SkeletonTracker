@@ -532,21 +532,17 @@ HRESULT Application::InitDevice()
 		return hr;
 
 	// Create a render target view
-	ID3D11Texture2D* pBackBuffer = nullptr;
-	hr = m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&pBackBuffer));
-	if (FAILED(hr))
-		return hr;
-
-	hr = m_pd3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, &m_pRenderTargetView);
-	pBackBuffer->Release();
-	if (FAILED(hr))
-		return hr;
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer;
+	V_RETURN(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backBuffer.GetAddressOf())),
+		L"Could not get buffer #0 for RenderTargetView");
+	V_RETURN(m_pd3dDevice->CreateRenderTargetView(backBuffer.Get(), nullptr, &m_pRenderTargetView),
+		L"Could not create RenderTargetView");
 
 	// Once the render target view is created, create a depth stencil view.  This
 	// allows Direct3D to efficiently render objects closer to the camera in front
 	// of objects further from the camera.
 
-	/*D3D11_TEXTURE2D_DESC backBufferDesc = { 0 };
+	D3D11_TEXTURE2D_DESC backBufferDesc = { 0 };
 	backBuffer->GetDesc(&backBufferDesc);
 
 	D3D11_TEXTURE2D_DESC depthStencilDesc;
@@ -561,29 +557,21 @@ HRESULT Application::InitDevice()
 	depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 	depthStencilDesc.CPUAccessFlags = 0;
 	depthStencilDesc.MiscFlags = 0;
-	ComPtr<ID3D11Texture2D> depthStencil;
-	DX::ThrowIfFailed(
-		m_d3dDevice->CreateTexture2D(
-			&depthStencilDesc,
-			nullptr,
-			&depthStencil
-		)
-	);
+
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> depthStencil;
+	V_RETURN(m_pd3dDevice->CreateTexture2D(&depthStencilDesc, nullptr, depthStencil.GetAddressOf()),
+		L"Could not create texture for the DepthStencilView");
 
 	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
 	depthStencilViewDesc.Format = depthStencilDesc.Format;
 	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 	depthStencilViewDesc.Flags = 0;
 	depthStencilViewDesc.Texture2D.MipSlice = 0;
-	DX::ThrowIfFailed(
-		m_d3dDevice->CreateDepthStencilView(
-			depthStencil.Get(),
-			&depthStencilViewDesc,
-			&m_depthStencilView
-		)
-	);*/
+	
+	V_RETURN(m_pd3dDevice->CreateDepthStencilView(depthStencil.Get(), &depthStencilViewDesc, &m_pDepthStencilView),
+		L"Could not create the DepthStencilView");
 
-	m_pImmediateContext->OMSetRenderTargets(1, &m_pRenderTargetView, nullptr);
+	m_pImmediateContext->OMSetRenderTargets(1, &m_pRenderTargetView, m_pDepthStencilView);
 
 	// Setup the viewport
 	D3D11_VIEWPORT vp;
@@ -604,12 +592,9 @@ HRESULT Application::InitDevice()
 //--------------------------------------------------------------------------------------
 void Application::RenderSimpleModel()
 {
-	// Specify the render target and depth stencil we created as the output target.
-	//m_pImmediateContext->OMSetRenderTargets(1, &m_pRenderTargetView, m_pDepthStencilView);
-
 	// Just clear the backbuffer
 	m_pImmediateContext->ClearRenderTargetView(m_pRenderTargetView, DirectX::Colors::MidnightBlue);
-	//m_pImmediateContext->ClearDepthStencilView(m_pDepthStencilView,	D3D11_CLEAR_DEPTH, 1.0f, 0);
+	m_pImmediateContext->ClearDepthStencilView(m_pDepthStencilView,	D3D11_CLEAR_DEPTH, 1.0f, 0);
 
 	m_SimpleModel.Render(m_pImmediateContext);
 

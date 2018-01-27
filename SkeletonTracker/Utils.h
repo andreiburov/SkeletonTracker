@@ -6,6 +6,9 @@
 #define VALIDATE(x, wstr) \
 do { HRESULT hr = (x); if( FAILED(hr) ) \
 { MessageBoxW(NULL, wstr, L"File error", MB_ICONERROR | MB_OK); } } while(0)
+#define V_RETURN(x, wstr) \
+do { HRESULT hr = (x); if( FAILED(hr) ) \
+{ MessageBoxW(NULL, wstr, L"File error", MB_ICONERROR | MB_OK); return hr; } } while(0)
 
 namespace util {
 
