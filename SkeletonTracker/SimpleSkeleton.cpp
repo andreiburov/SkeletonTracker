@@ -20,8 +20,8 @@ SimpleSkeleton::SimpleSkeleton(const float jointThickness, const float boneThick
 	}
 	in.close();
 
-	Vector4 scale = VECTOR4(5.5f, 5.3f, 5.0f);
-	Vector4 translate = VECTOR4(0.0f, 2.0f, 12.0f);
+	Vector4 scale = util::VECTOR4(5.5f, 5.3f, 5.0f);
+	Vector4 translate = util::VECTOR4(0.0f, 2.0f, 12.0f);
 	ApplyTransformations(scale, translate);
 }
 
