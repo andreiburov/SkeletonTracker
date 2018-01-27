@@ -90,22 +90,43 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::wstring& modelFile
 
 	VALIDATE(pd3dDevice->CreateBuffer(&indexBufferDesc, &indexBufferData, &m_pIndexBuffer),
 		L"Could not create IndexBuffer");
+
+	D3D11_BUFFER_DESC constantBufferDesc = { 0 };
+	constantBufferDesc.ByteWidth = sizeof(m_ConstantBufferData);
+	constantBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	constantBufferDesc.CPUAccessFlags = 0;
+	constantBufferDesc.MiscFlags = 0;
+	constantBufferDesc.StructureByteStride = 0;
+	
+	VALIDATE(pd3dDevice->CreateBuffer(&constantBufferDesc, nullptr, &m_pConstantBuffer),
+		L"Could not create ConstantBuffer");
+
+	m_ConstantBufferData.view = DirectX::XMFLOAT4X4(
+		-1.00000000f, 0.00000000f, 0.00000000f, 0.00000000f,
+		0.00000000f, 0.89442718f, 0.44721359f, 0.00000000f,
+		0.00000000f, 0.44721359f, -0.89442718f, -2.23606800f,
+		0.00000000f, 0.00000000f, 0.00000000f, 1.00000000f);
+
+	m_ConstantBufferData.projection = DirectX::XMFLOAT4X4(
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, -1.0f, -.1f,
+		0.0f, 0.0f, -1.0f, 0.0f
+	);
 }
 
 void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext)
 {
-	// Update the constant buffer to rotate the cube model.
-	//m_constantBufferData.model = rotationY(-degree);
-	//degree += 1.0f;
+	static float degree = 0.f;
+	DirectX::XMFLOAT4X4 rotationY;
+	DirectX::XMStoreFloat4x4(&rotationY, DirectX::XMMatrixRotationY(degree));
 
-	/*pd3dDeviceContext->UpdateSubresource(
-		m_constantBuffer.Get(),
-		0,
-		nullptr,
-		&m_constantBufferData,
-		0,
-		0
-	);*/
+	// Update the constant buffer to rotate the cube model.
+	m_ConstantBufferData.model = rotationY;
+	degree += 0.01f;
+
+	pd3dDeviceContext->UpdateSubresource(m_pConstantBuffer,	0, nullptr,	&m_ConstantBufferData, 0, 0);
 
 	pd3dDeviceContext->IASetInputLayout(m_pInputLayout);
 
@@ -118,13 +139,7 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext)
 
 	// Set the vertex and pixel shader stage state.
 	pd3dDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
-
-	/*pd3dDeviceContext->VSSetConstantBuffers(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf()
-	);*/
-
+	pd3dDeviceContext->VSSetConstantBuffers(0, 1, &m_pConstantBuffer);
 	pd3dDeviceContext->PSSetShader(m_pPixelShader, nullptr,	0);
 
 	// Draw the cube.
@@ -138,4 +153,5 @@ void SimpleModel::Clear()
 	SAFE_RELEASE(m_pPixelShader);
 	SAFE_RELEASE(m_pVertexBuffer);
 	SAFE_RELEASE(m_pIndexBuffer);
+	SAFE_RELEASE(m_pConstantBuffer);
 }

@@ -13,6 +13,12 @@ public:
 			: pos{ posx,posy,posz }, color{ colx, coly, colz } {}
 	};
 
+	struct ConstantBuffer {
+		DirectX::XMFLOAT4X4 model;
+		DirectX::XMFLOAT4X4 view;
+		DirectX::XMFLOAT4X4 projection;
+	};
+
 	SimpleModel() {}
 	~SimpleModel() { Clear(); }
 
@@ -30,5 +36,7 @@ private:
 	ID3D11PixelShader* m_pPixelShader = nullptr;
 	ID3D11Buffer* m_pVertexBuffer = nullptr;
 	ID3D11Buffer* m_pIndexBuffer = nullptr;
+	ID3D11Buffer* m_pConstantBuffer = nullptr;
+	ConstantBuffer m_ConstantBufferData;
 	size_t m_IndicesCount = 0;
 };

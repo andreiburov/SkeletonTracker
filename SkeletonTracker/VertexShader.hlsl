@@ -1,11 +1,11 @@
 #include "Common.hlsli"
 
-//cbuffer simpleConstantBuffer : register(b0)
-//{
-//	matrix model;
-//	matrix view;
-//	matrix projection;
-//};
+cbuffer simpleConstantBuffer : register(b0)
+{
+	matrix model;
+	matrix view;
+	matrix projection;
+};
 
 PixelShaderInput SimpleVertexShader(VertexShaderInput input)
 {
@@ -13,9 +13,9 @@ PixelShaderInput SimpleVertexShader(VertexShaderInput input)
 	float4 pos = float4(input.pos, 1.0f);
 
 	// Transform the vertex position into projection space.
-	/*pos = mul(pos, model);
+	pos = mul(pos, model);
 	pos = mul(pos, view);
-	pos = mul(pos, projection);*/
+	pos = mul(pos, projection);
 	vertexShaderOutput.pos = pos;
 
 	// Pass the vertex color through to the pixel shader.
