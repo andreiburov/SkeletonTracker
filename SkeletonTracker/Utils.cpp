@@ -79,4 +79,26 @@ namespace util {
 		this->w = v.w;
 	}
 
+	TempFile::TempFile(std::string path)
+	{
+		auto t = std::time(nullptr);
+		struct tm tm;
+		localtime_s(&tm, &t);
+		std::ostringstream oss;
+		oss << std::put_time(&tm, path.append("/%d-%m-%Y_%H-%M-%S.txt").c_str());
+		file.open(oss.str(), std::ios::out);
+	}
+
+	TempFile::~TempFile()
+	{
+		file.close();
+	}
+
+	TempFile& TempFile::operator<<(const Vector4& v)
+	{
+		Vec4 vv(v);
+		file << vv;
+		return *this;
+	}
+
 } // util

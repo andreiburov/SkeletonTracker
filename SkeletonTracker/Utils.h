@@ -17,4 +17,22 @@ namespace util {
 		Vec4(const Vector4& v);
 		friend std::wostream& operator<<(std::wostream& out, const Vec4& v);
 	};
+
+	struct TempFile {
+		std::wofstream file;
+
+		TempFile(std::string path);
+		~TempFile();
+		TempFile& operator<<(const Vector4& v);
+
+		template<typename T>
+		TempFile& operator<<(const T& e);
+	};
+
+	template<typename T>
+	TempFile& TempFile::operator<<(const T& e)
+	{ 
+		file << e; 
+		return *this; 
+	};
 } //util
