@@ -77,6 +77,7 @@ private:
 	KinectSkeleton			 m_KinectSkeleton;
 	SimpleSkeleton			 m_SimpleSkeleton;
 	SimpleModel				 m_SimpleModel;
+	float					 m_aspectRatio; // Aspect ratio of view-space X:Y
 
 	/// <summary>
 	/// Create the first connected Kinect found 

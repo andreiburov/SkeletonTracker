@@ -6,17 +6,16 @@ public:
 	struct SimpleVertex
 	{
 		float pos[3];
+		float nor[3];
 
 		SimpleVertex(float posx, float posy, float posz)
-			: pos{ posx,posy,posz }{}
+			: pos{ posx,posy,posz }, nor{ 0.f,0.f,0.f } {}
 	};
 
-
-
-	struct ConstantBuffer {
-		DirectX::XMFLOAT4X4 model;
-		DirectX::XMFLOAT4X4 view;
+	struct VertexConstantBuffer {
+		DirectX::XMFLOAT4X4 worldView;
 		DirectX::XMFLOAT4X4 projection;
+		DirectX::XMFLOAT4X4 worldViewIT;
 	};
 
 	SimpleModel() {}
@@ -24,7 +23,7 @@ public:
 
 	void Create(ID3D11Device* pd3dDevice, const std::wstring& modelFilename,
 		const std::wstring& vertexShaderFileName, 
-		const std::wstring& pixelShaderFilename);
+		const std::wstring& pixelShaderFilename, float aspectRatio);
 
 	void Render(ID3D11DeviceContext*);
 
@@ -36,10 +35,15 @@ private:
 	ID3D11PixelShader* m_pPixelShader = nullptr;
 	ID3D11Buffer* m_pVertexBuffer = nullptr;
 	ID3D11Buffer* m_pIndexBuffer = nullptr;
-	ID3D11Buffer* m_pConstantBuffer = nullptr;
-	ConstantBuffer m_ConstantBufferData;
+	ID3D11Buffer* m_pVertexConstantBuffer = nullptr; 
+	//ID3D11Buffer* m_pPixelConstantBuffer = nullptr;
+	VertexConstantBuffer m_VertexConstantBufferData;
+	//ConstantBuffer m_PixelConstantBufferData;
+	DirectX::XMMATRIX m_View;
 	size_t m_IndicesCount = 0;
 
 	void readObjFile(const std::wstring& filename,
 		std::vector<SimpleVertex>& vertices, std::vector<unsigned short>& indices);
+
+	void computeFaceNormals(std::vector<SimpleVertex>& vertices, const std::vector<unsigned short>& indices);
 };

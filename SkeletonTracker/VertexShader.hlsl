@@ -1,25 +1,20 @@
 #include "Common.hlsli"
 
-cbuffer simpleConstantBuffer : register(b0)
+cbuffer vertexConstantBuffer : register(b0)
 {
-	matrix model;
-	matrix view;
+	matrix worldView;
 	matrix projection;
+	matrix worldViewIT; // Inverse Transpose
 };
 
 PixelShaderInput SimpleVertexShader(VertexShaderInput input)
 {
-	PixelShaderInput vertexShaderOutput;
-	float4 pos = float4(input.pos, 1.0f);
+	PixelShaderInput output = (PixelShaderInput)0;
+	
+	float4 posView = mul(float4(input.pos, 1.f), worldView);
+	output.posView = posView.xyz;
+	output.norView = mul(input.nor, (float3x3)worldViewIT);
+	output.pos = mul(posView, projection);
 
-	// Transform the vertex position into projection space.
-	pos = mul(pos, model);
-	pos = mul(pos, view);
-	pos = mul(pos, projection);
-	vertexShaderOutput.pos = pos;
-
-	// Pass the vertex color through to the pixel shader.
-	//vertexShaderOutput.color = float4(input.color, 1.0f);
-
-	return vertexShaderOutput;
+	return output;
 }

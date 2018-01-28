@@ -207,7 +207,7 @@ LRESULT CALLBACK Application::DlgProc(HWND hWnd, UINT message, WPARAM wParam, LP
 
 		// Create Simple Model
 		m_SimpleModel.Create(m_pd3dDevice, L"SimpleModel/SimpleModelRest.obj", 
-			L"VertexShader.cso", L"PixelShader.cso");
+			L"VertexShader.cso", L"PixelShader.cso", m_aspectRatio);
 	}
 	break;
 
@@ -413,6 +413,8 @@ HRESULT Application::InitDevice()
 	UINT width = rc.right - rc.left;
 	UINT height = rc.bottom - rc.top;
 
+	m_aspectRatio = ((float)width) / height;
+
 	UINT createDeviceFlags = 0;
 #ifdef _DEBUG
 	createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
@@ -539,9 +541,8 @@ HRESULT Application::InitDevice()
 	V_RETURN(m_pd3dDevice->CreateRenderTargetView(backBuffer.Get(), nullptr, &m_pRenderTargetView),
 		L"Could not create RenderTargetView");
 
-	// Once the render target view is created, create a depth stencil view.  This
-	// allows Direct3D to efficiently render objects closer to the camera in front
-	// of objects further from the camera.
+	// About depthStencil https://msdn.microsoft.com/en-us/library/windows/desktop/bb205074(v=vs.85).aspx
+	// Create depthStencil resource
 
 	D3D11_TEXTURE2D_DESC backBufferDesc = { 0 };
 	backBuffer->GetDesc(&backBufferDesc);
@@ -562,6 +563,24 @@ HRESULT Application::InitDevice()
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> depthStencil;
 	V_RETURN(m_pd3dDevice->CreateTexture2D(&depthStencilDesc, nullptr, depthStencil.GetAddressOf()),
 		L"Could not create texture for the DepthStencilView");
+
+	// Create depthStencil state
+	D3D11_DEPTH_STENCIL_DESC dsDesc;
+
+	// Depth test parameters
+	dsDesc.DepthEnable = true;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+
+	// Stencil test parameters
+	dsDesc.StencilEnable = false;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> depthStencilState;
+	V_RETURN(m_pd3dDevice->CreateDepthStencilState(&dsDesc, depthStencilState.GetAddressOf()),
+		L"Could not create DepthStencilState");
+
+	m_pImmediateContext->OMSetDepthStencilState(depthStencilState.Get(), 1);
+
+	// Create depthStencil view and bind it to the pipeline
 
 	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
 	depthStencilViewDesc.Format = depthStencilDesc.Format;
