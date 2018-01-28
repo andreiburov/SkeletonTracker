@@ -7,6 +7,11 @@ cbuffer vertexConstantBuffer : register(b0)
 	matrix worldViewIT; // Inverse Transpose
 };
 
+cbuffer hierarchyConstantBuffer : register(b1)
+{
+	matrix transform[SMPL_SKELETON_POSITION_COUNT];
+};
+
 PixelShaderInput SimpleVertexShader(VertexShaderInput input)
 {
 	PixelShaderInput output = (PixelShaderInput)0;

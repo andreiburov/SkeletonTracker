@@ -67,26 +67,44 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::wstring& modelFile
 	VALIDATE(pd3dDevice->CreateBuffer(&indexBufferDesc, &indexBufferData, &m_pIndexBuffer),
 		L"Could not create IndexBuffer");
 
-	D3D11_BUFFER_DESC constantBufferDesc = { 0 };
-	constantBufferDesc.ByteWidth = sizeof(m_VertexConstantBufferData);
-	constantBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	constantBufferDesc.CPUAccessFlags = 0;
-	constantBufferDesc.MiscFlags = 0;
-	constantBufferDesc.StructureByteStride = 0;
-	
-	VALIDATE(pd3dDevice->CreateBuffer(&constantBufferDesc, nullptr, &m_pVertexConstantBuffer),
-		L"Could not create ConstantBuffer");
+	// Create vertex ConstantBuffer for world view perspective matrices
+
+	{
+		D3D11_BUFFER_DESC constantBufferDesc = { 0 };
+		constantBufferDesc.ByteWidth = sizeof(m_VertexConstantBufferData);
+		constantBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+		constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		constantBufferDesc.CPUAccessFlags = 0;
+		constantBufferDesc.MiscFlags = 0;
+		constantBufferDesc.StructureByteStride = 0;
+
+		VALIDATE(pd3dDevice->CreateBuffer(&constantBufferDesc, nullptr, &m_pVertexConstantBuffer),
+			L"Could not create VertexConstantBuffer");
+	}
 
 	DirectX::XMFLOAT4 eye(0, 1, -2, 1);
 	DirectX::XMFLOAT4 focus(0, 0, 0, 1);
 	DirectX::XMFLOAT4 up(0, 1, 0, 0);
-	m_View = DirectX::XMMatrixLookAtLH(DirectX::XMLoadFloat4(&eye), 
+	m_View = DirectX::XMMatrixLookAtLH(DirectX::XMLoadFloat4(&eye),
 		DirectX::XMLoadFloat4(&focus),
 		DirectX::XMLoadFloat4(&up));
 
 	DirectX::XMStoreFloat4x4(&m_VertexConstantBufferData.projection,
 		DirectX::XMMatrixTranspose(DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PIDIV2, aspectRatio, 0.001f, 10.0f)));
+
+	// Create hierarchy ConstantBuffer for linear blend skinning
+	{
+		D3D11_BUFFER_DESC constantBufferDesc = { 0 };
+		constantBufferDesc.ByteWidth = sizeof(m_HierarchyConstantBufferData);
+		constantBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+		constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		constantBufferDesc.CPUAccessFlags = 0;
+		constantBufferDesc.MiscFlags = 0;
+		constantBufferDesc.StructureByteStride = 0;
+
+		VALIDATE(pd3dDevice->CreateBuffer(&constantBufferDesc, nullptr, &m_pHierarchyConstantBuffer),
+			L"Could not create HierarchyConstantBuffer");
+	}
 }
 
 void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext)
@@ -103,6 +121,11 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext)
 	degree += 0.01f;
 
 	pd3dDeviceContext->UpdateSubresource(m_pVertexConstantBuffer,	0, nullptr,	&m_VertexConstantBufferData, 0, 0);
+	
+	SimpleHierarchy::SimpleRotations rotations;
+
+	m_Hierarchy.Update(rotations, m_HierarchyConstantBufferData);
+	pd3dDeviceContext->UpdateSubresource(m_pHierarchyConstantBuffer, 0, nullptr, &m_HierarchyConstantBufferData, 0, 0);
 
 	pd3dDeviceContext->IASetInputLayout(m_pInputLayout);
 
@@ -116,6 +139,7 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext)
 	// Set the vertex and pixel shader stage state.
 	pd3dDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
 	pd3dDeviceContext->VSSetConstantBuffers(0, 1, &m_pVertexConstantBuffer);
+	pd3dDeviceContext->VSSetConstantBuffers(1, 2, &m_pHierarchyConstantBuffer);
 	pd3dDeviceContext->PSSetShader(m_pPixelShader, nullptr,	0);
 
 	// Draw the cube.

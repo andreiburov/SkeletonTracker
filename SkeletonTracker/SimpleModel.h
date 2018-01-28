@@ -1,5 +1,7 @@
 #pragma once
 
+#include "SimpleHierarchy.h"
+
 class SimpleModel
 {
 public:
@@ -36,11 +38,14 @@ private:
 	ID3D11Buffer* m_pVertexBuffer = nullptr;
 	ID3D11Buffer* m_pIndexBuffer = nullptr;
 	ID3D11Buffer* m_pVertexConstantBuffer = nullptr; 
-	//ID3D11Buffer* m_pPixelConstantBuffer = nullptr;
 	VertexConstantBuffer m_VertexConstantBufferData;
-	//ConstantBuffer m_PixelConstantBufferData;
+
 	DirectX::XMMATRIX m_View;
 	size_t m_IndicesCount = 0;
+
+	ID3D11Buffer* m_pHierarchyConstantBuffer = nullptr;
+	SimpleHierarchy m_Hierarchy;
+	SimpleHierarchy::HierarchyConstantBuffer m_HierarchyConstantBufferData;
 
 	void readObjFile(const std::wstring& filename,
 		std::vector<SimpleVertex>& vertices, std::vector<unsigned short>& indices);

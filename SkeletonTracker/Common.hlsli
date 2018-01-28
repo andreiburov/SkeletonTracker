@@ -1,3 +1,5 @@
+#define SMPL_SKELETON_POSITION_COUNT 24
+
 struct VertexShaderInput
 {
 	float3 pos : POSITION;
