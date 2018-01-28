@@ -19,7 +19,7 @@ PixelShaderInput SimpleVertexShader(VertexShaderInput input)
 	vertexShaderOutput.pos = pos;
 
 	// Pass the vertex color through to the pixel shader.
-	vertexShaderOutput.color = float4(input.color, 1.0f);
+	//vertexShaderOutput.color = float4(input.color, 1.0f);
 
 	return vertexShaderOutput;
 }

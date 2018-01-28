@@ -129,7 +129,7 @@ void SimpleModel::Clear()
 }
 
 void SimpleModel::readObjFile(const std::wstring& filename,
-	std::vector<SimpleVertex> vertices, std::vector<unsigned short>& indices)
+	std::vector<SimpleVertex>& vertices, std::vector<unsigned short>& indices)
 {
 	std::ifstream file(filename, std::ios::in);
 	if (!file)
@@ -138,14 +138,25 @@ void SimpleModel::readObjFile(const std::wstring& filename,
 	}
 
 	vertices.reserve(VERTEX_COUNT);
-
-	vertices.insert(vertices.begin(),
-		std::istream_iterator<SimpleVertex>(file),
-		std::istream_iterator<SimpleVertex>());
-
 	indices.reserve(FACE_COUNT * 3);
 
-	indices.insert(indices.begin(),
-		std::istream_iterator<unsigned short>(file),
-		std::istream_iterator<unsigned short>());
+	while (file)
+	{
+		std::string type;
+		file >> type;
+		if (type.compare("v") == 0)
+		{
+			float x, y, z;
+			file >> x >> y >> z;
+			vertices.push_back(SimpleVertex(x, y, z));
+		}
+		else if (type.compare("f") == 0)
+		{
+			unsigned short x, y, z;
+			file >> x >> y >> z;
+			indices.push_back(x - 1);
+			indices.push_back(y - 1);
+			indices.push_back(z - 1);
+		}
+	}
 }

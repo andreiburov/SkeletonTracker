@@ -11,6 +11,8 @@ public:
 			: pos{ posx,posy,posz }{}
 	};
 
+
+
 	struct ConstantBuffer {
 		DirectX::XMFLOAT4X4 model;
 		DirectX::XMFLOAT4X4 view;
@@ -39,5 +41,5 @@ private:
 	size_t m_IndicesCount = 0;
 
 	void readObjFile(const std::wstring& filename,
-		std::vector<SimpleVertex> vertices, std::vector<unsigned short>& indices)
+		std::vector<SimpleVertex>& vertices, std::vector<unsigned short>& indices);
 };
