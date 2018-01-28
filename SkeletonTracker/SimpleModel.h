@@ -6,11 +6,9 @@ public:
 	struct SimpleVertex
 	{
 		float pos[3];
-		float color[3];
 
-		SimpleVertex(float posx, float posy, float posz,
-			float colx, float coly, float colz)
-			: pos{ posx,posy,posz }, color{ colx, coly, colz } {}
+		SimpleVertex(float posx, float posy, float posz)
+			: pos{ posx,posy,posz }{}
 	};
 
 	struct ConstantBuffer {
@@ -39,4 +37,7 @@ private:
 	ID3D11Buffer* m_pConstantBuffer = nullptr;
 	ConstantBuffer m_ConstantBufferData;
 	size_t m_IndicesCount = 0;
+
+	void readObjFile(const std::wstring& filename,
+		std::vector<SimpleVertex> vertices, std::vector<unsigned short>& indices)
 };

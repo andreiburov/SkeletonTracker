@@ -2,13 +2,15 @@
 #include "SimpleModel.h"
 #include "Utils.h"
 
+#define VERTEX_COUNT 6890
+#define FACE_COUNT 13776
+
 void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::wstring& modelFilename,
 	const std::wstring& vertexShaderFilename, const std::wstring& pixelShaderFilename)
 {
 	const D3D11_INPUT_ELEMENT_DESC vertexLayoutDesc[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
 	std::vector<byte> vertexShader = util::readShaderFromCSO(vertexShaderFilename);
@@ -22,22 +24,13 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::wstring& modelFile
 	VALIDATE(pd3dDevice->CreatePixelShader(pixelShader.data(), pixelShader.size(),
 		nullptr, &m_pPixelShader), L"Could not create PixelShader");
 
-	// this is just an example
-	SimpleVertex cubeVertices[] =
-	{
-		{ -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f }, // +Y (top face)
-		{ 0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 0.0f },
-		{ 0.5f, 0.5f,  0.5f, 1.0f, 1.0f, 1.0f },
-		{ -0.5f, 0.5f,  0.5f, 0.0f, 1.0f, 1.0f },
+	std::vector<SimpleVertex> vertices;
+	std::vector<unsigned short> indices;
 
-		{ -0.5f, -0.5f,  0.5f, 0.0f, 0.0f, 1.0f }, // -Y (bottom face)
-		{ 0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 1.0f },
-		{ 0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f },
-		{ -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.0f },
-	};
+	readObjFile(modelFilename, vertices, indices);
 
 	D3D11_BUFFER_DESC vertexBufferDesc = { 0 };
-	vertexBufferDesc.ByteWidth = sizeof(SimpleVertex) * ARRAYSIZE(cubeVertices);
+	vertexBufferDesc.ByteWidth = sizeof(SimpleVertex) * vertices.size();
 	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vertexBufferDesc.CPUAccessFlags = 0;
@@ -45,38 +38,17 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::wstring& modelFile
 	vertexBufferDesc.StructureByteStride = 0;
 
 	D3D11_SUBRESOURCE_DATA vertexBufferData;
-	vertexBufferData.pSysMem = cubeVertices;
+	vertexBufferData.pSysMem = vertices.data();
 	vertexBufferData.SysMemPitch = 0;
 	vertexBufferData.SysMemSlicePitch = 0;
 
 	VALIDATE(pd3dDevice->CreateBuffer(&vertexBufferDesc, &vertexBufferData,
 		&m_pVertexBuffer), L"Could not create VertexBuffer");
 
-	unsigned short cubeIndices[] =
-	{
-		0, 1, 2,
-		0, 2, 3,
-
-		4, 5, 6,
-		4, 6, 7,
-
-		3, 2, 5,
-		3, 5, 4,
-
-		2, 1, 6,
-		2, 6, 5,
-
-		1, 7, 6,
-		1, 0, 7,
-
-		0, 3, 4,
-		0, 4, 7
-	};
-
-	m_IndicesCount = ARRAYSIZE(cubeIndices);
+	m_IndicesCount = indices.size();
 
 	D3D11_BUFFER_DESC indexBufferDesc;
-	indexBufferDesc.ByteWidth = sizeof(unsigned short) * ARRAYSIZE(cubeIndices);
+	indexBufferDesc.ByteWidth = sizeof(unsigned short) * indices.size();
 	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	indexBufferDesc.CPUAccessFlags = 0;
@@ -84,7 +56,7 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::wstring& modelFile
 	indexBufferDesc.StructureByteStride = 0;
 
 	D3D11_SUBRESOURCE_DATA indexBufferData;
-	indexBufferData.pSysMem = cubeIndices;
+	indexBufferData.pSysMem = indices.data();
 	indexBufferData.SysMemPitch = 0;
 	indexBufferData.SysMemSlicePitch = 0;
 
@@ -154,4 +126,26 @@ void SimpleModel::Clear()
 	SAFE_RELEASE(m_pVertexBuffer);
 	SAFE_RELEASE(m_pIndexBuffer);
 	SAFE_RELEASE(m_pConstantBuffer);
+}
+
+void SimpleModel::readObjFile(const std::wstring& filename,
+	std::vector<SimpleVertex> vertices, std::vector<unsigned short>& indices)
+{
+	std::ifstream file(filename, std::ios::in);
+	if (!file)
+	{
+		MessageBoxW(NULL, (std::wstring(L"Could not open ") + filename).c_str(), L"File error", MB_ICONERROR | MB_OK);
+	}
+
+	vertices.reserve(VERTEX_COUNT);
+
+	vertices.insert(vertices.begin(),
+		std::istream_iterator<SimpleVertex>(file),
+		std::istream_iterator<SimpleVertex>());
+
+	indices.reserve(FACE_COUNT * 3);
+
+	indices.insert(indices.begin(),
+		std::istream_iterator<unsigned short>(file),
+		std::istream_iterator<unsigned short>());
 }

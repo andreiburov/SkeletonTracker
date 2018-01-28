@@ -206,7 +206,8 @@ LRESULT CALLBACK Application::DlgProc(HWND hWnd, UINT message, WPARAM wParam, LP
 		CreateFirstConnected();
 
 		// Create Simple Model
-		m_SimpleModel.Create(m_pd3dDevice, L"ModelFile", L"VertexShader.cso", L"PixelShader.cso");
+		m_SimpleModel.Create(m_pd3dDevice, L"SimpleModel/SimpleModelRest.obj", 
+			L"VertexShader.cso", L"PixelShader.cso");
 	}
 	break;
 
