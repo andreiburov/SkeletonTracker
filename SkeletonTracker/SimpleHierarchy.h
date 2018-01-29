@@ -12,9 +12,18 @@ public:
 		SimpleRotations()
 		{
 			ZeroMemory(rotation, sizeof(rotation));
+			for (unsigned short i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
+			{
+				rotation[i] = DirectX::XMQuaternionIdentity();
+			}
 		}
 
-		DirectX::XMVECTOR operator[](int i) const
+		DirectX::XMVECTOR operator[](_SMPL_SKELETON_POSITION_INDEX i) const
+		{
+			return rotation[i];
+		}
+
+		DirectX::XMVECTOR& operator[](_SMPL_SKELETON_POSITION_INDEX i)
 		{
 			return rotation[i];
 		}
@@ -57,5 +66,4 @@ private:
 	};
 
 	DirectX::XMVECTOR m_Joints[SMPL_SKELETON_POSITION_COUNT];
-	DirectX::XMMATRIX m_Transformations[SMPL_SKELETON_POSITION_COUNT];
 };

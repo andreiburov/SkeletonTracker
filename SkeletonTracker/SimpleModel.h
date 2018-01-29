@@ -7,6 +7,8 @@ class SimpleModel
 public:
 	struct SimpleVertex
 	{
+		float weight[4];
+		int joint_idx[4];
 		float pos[3];
 		float nor[3];
 

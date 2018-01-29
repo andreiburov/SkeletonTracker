@@ -6,7 +6,8 @@ SimpleHierarchy::SimpleHierarchy()
 	// Taken from SMPL model for man
 	DirectX::XMFLOAT4 joints[SMPL_SKELETON_POSITION_COUNT] = {
 		{ -0.00087631f, -0.21141872f, 0.02782112f, 1.0f},
-		{ 0.07048489f, -0.30100253f, 0.01977493f, 1.0f},		{ -0.06988833f, -0.30037916f, 0.02302543f, 1.0f},
+		{ 0.07048489f, -0.30100253f, 0.01977493f, 1.0f},
+		{ -0.06988833f, -0.30037916f, 0.02302543f, 1.0f},
 		{ -0.00338452f, -0.10816186f, 0.00563598f, 1.0f},
 		{ 0.10115381f, -0.6652119f, 0.01308602f, 1.0f},
 		{ -0.10604072f, -0.67102962f, 0.01384011f, 1.0f},
@@ -38,16 +39,23 @@ SimpleHierarchy::SimpleHierarchy()
 
 void SimpleHierarchy::Update(const SimpleRotations& rotations, HierarchyConstantBuffer& hierarchy)
 {
-	m_Transformations[0] = DirectX::XMMatrixRotationQuaternion(rotations[0])
-		* DirectX::XMMatrixTranslationFromVector(m_Joints[0]);
+	DirectX::XMMATRIX transform[SMPL_SKELETON_POSITION_COUNT];
+	transform[0] = DirectX::XMMatrixAffineTransformation(DirectX::XMVectorSet(1, 1, 1, 1), 
+		m_Joints[0], rotations[SMPL_SKELETON_POSITION_HIP_CENTER], DirectX::XMVectorSet(0, 0, 0, 1));
 
 	// Update children transformations
-	for (unsigned short i = 1; i < SMPL_SKELETON_POSITION_COUNT; i++) 
+	for (int i = SMPL_SKELETON_POSITION_HIP_RIGHT; i < SMPL_SKELETON_POSITION_COUNT; i++)
 	{
 		// Here can be some low pass filtering
-		m_Transformations[i] = m_Transformations[SMPL_PARENT_INDEX[i]]
-			* DirectX::XMMatrixRotationQuaternion(rotations[i])
-			* DirectX::XMMatrixTranslationFromVector(
-				DirectX::XMVectorSubtract(m_Joints[i], m_Joints[SMPL_PARENT_INDEX[i]]));
+		transform[i] = transform[SMPL_PARENT_INDEX[i]]
+			* DirectX::XMMatrixAffineTransformation(DirectX::XMVectorSet(1, 1, 1, 1),
+				DirectX::XMVectorSubtract(m_Joints[i], m_Joints[SMPL_PARENT_INDEX[i]]),
+				rotations[(_SMPL_SKELETON_POSITION_INDEX)i], DirectX::XMVectorSet(0, 0, 0, 1));
+	}
+
+	for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
+	{
+		// Transpose, because HLSL expects matrices in the column major form
+		DirectX::XMStoreFloat4x4(&hierarchy.transform[i], DirectX::XMMatrixTranspose(transform[i]));
 	}
 }

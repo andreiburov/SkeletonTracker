@@ -12,8 +12,10 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::wstring& modelFile
 {
 	const D3D11_INPUT_ELEMENT_DESC vertexLayoutDesc[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0}
+		{ "WEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "JOINT_INDICES", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  32, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D11_INPUT_PER_VERTEX_DATA, 0}
 	};
 
 	std::vector<byte> vertexShader = util::readShaderFromCSO(vertexShaderFilename);
@@ -110,6 +112,9 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::wstring& modelFile
 void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext)
 {
 	static float degree = 0.f;
+	static float elapsed = 0.f;
+	static const float factor = 3;
+	static const float range = DirectX::XM_PIDIV2/3.f;
 
 	// Update the constant buffer to rotate the cube model.
 	DirectX::XMMATRIX transform = 
@@ -119,10 +124,20 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext)
 		DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(nullptr, DirectX::XMMatrixTranspose(transform))));
 
 	degree += 0.01f;
+	elapsed += 0.01f;
 
 	pd3dDeviceContext->UpdateSubresource(m_pVertexConstantBuffer,	0, nullptr,	&m_VertexConstantBufferData, 0, 0);
 	
+	float angle = std::abs(std::remainder(elapsed * factor, range * 2));
 	SimpleHierarchy::SimpleRotations rotations;
+	rotations[SMPL_SKELETON_POSITION_WRIST_LEFT] = 
+		DirectX::XMQuaternionRotationMatrix(DirectX::XMMatrixRotationZ(angle/10.f));
+	rotations[SMPL_SKELETON_POSITION_ELBOW_LEFT] =
+		DirectX::XMQuaternionRotationMatrix(DirectX::XMMatrixRotationY(angle/5.f));
+	rotations[SMPL_SKELETON_POSITION_HIP_RIGHT] = 
+		DirectX::XMQuaternionRotationMatrix(DirectX::XMMatrixRotationX(angle));
+	rotations[SMPL_SKELETON_POSITION_KNEE_RIGHT] =
+		DirectX::XMQuaternionRotationMatrix(DirectX::XMMatrixRotationX(angle));
 
 	m_Hierarchy.Update(rotations, m_HierarchyConstantBufferData);
 	pd3dDeviceContext->UpdateSubresource(m_pHierarchyConstantBuffer, 0, nullptr, &m_HierarchyConstantBufferData, 0, 0);
@@ -154,7 +169,7 @@ void SimpleModel::Clear()
 	SAFE_RELEASE(m_pVertexBuffer);
 	SAFE_RELEASE(m_pIndexBuffer);
 	SAFE_RELEASE(m_pVertexConstantBuffer);
-	//SAFE_RELEASE(m_pPixelConstantBuffer);
+	SAFE_RELEASE(m_pHierarchyConstantBuffer);
 }
 
 void SimpleModel::readObjFile(const std::wstring& filename,
@@ -168,6 +183,8 @@ void SimpleModel::readObjFile(const std::wstring& filename,
 
 	vertices.reserve(VERTEX_COUNT);
 	indices.reserve(FACE_COUNT * 3);
+
+	int i = 0;
 
 	while (file)
 	{
@@ -186,6 +203,21 @@ void SimpleModel::readObjFile(const std::wstring& filename,
 			indices.push_back(x - 1);
 			indices.push_back(y - 1);
 			indices.push_back(z - 1);
+		}
+		else if (type.compare("#w") == 0)
+		{
+			for (int j = 0, k = 0; j < SMPL_SKELETON_POSITION_COUNT; j++)
+			{
+				float weight;
+				file >> weight;
+				if (weight > 0.00001f) // small epsilon value
+				{
+					vertices[i].joint_idx[k] = j;
+					vertices[i].weight[k] = weight;
+					k++;
+				}
+			}
+			i++; // next vertex
 		}
 	}
 }
