@@ -15,21 +15,21 @@ cbuffer hierarchyConstantBuffer : register(b1)
 	matrix transform[SMPL_SKELETON_POSITION_COUNT];
 };
 
-cbuffer posdirsConstantBuffer : register(b2)
-{
-	float3 posdirs[SMPL_POSDIRS_COUNT];
-}
+//cbuffer posedirsConstantBuffer : register(b2)
+//{
+//	float3 posdirs[SMPL_POSDIRS_COUNT];
+//}
 
-cbuffer poscoefConstantBuffer : register(b3)
-{
-	float poscoef[SMPL_POSDIRS_COUNT];
-}
+//cbuffer thetaConstantBuffer : register(b3)
+//{
+//	float poscoef[SMPL_POSDIRS_COUNT];
+//}
 
 struct VertexShaderInput
 {
 	// for skinning
 	float4 wgt : WEIGHTS;
-	int4 jdx: JOINT_INDICES;
+	uint4 jdx: JOINT_INDICES;
 
 	float3 pos : POSITION;
 	float3 nor : NORMAL;
@@ -41,11 +41,11 @@ struct LBSOutput
 	float3 nor : NORMAL;
 };
 
-float3 SMPLPoseCorrection(uint id : SV_VertexID)
-{
-	float3 pos = posdirs[id];
-	return pos;
-}
+//float3 SMPLPoseCorrection(uint id : SV_VertexID)
+//{
+//	float3 pos = posedirs[id];
+//	return pos;
+//}
 
 LBSOutput LinearBlendSkinning(VertexShaderInput input)
 {

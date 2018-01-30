@@ -13,7 +13,7 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::wstring& modelFile
 	const D3D11_INPUT_ELEMENT_DESC vertexLayoutDesc[] =
 	{
 		{ "WEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "JOINT_INDICES", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "JOINT_INDICES", 0, DXGI_FORMAT_R32G32B32A32_UINT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  32, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D11_INPUT_PER_VERTEX_DATA, 0}
 	};
@@ -126,7 +126,7 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext)
 	degree += 0.01f;
 	elapsed += 0.01f;
 
-	pd3dDeviceContext->UpdateSubresource(m_pVertexConstantBuffer,	0, nullptr,	&m_VertexConstantBufferData, 0, 0);
+	pd3dDeviceContext->UpdateSubresource(m_pVertexConstantBuffer, 0, nullptr, &m_VertexConstantBufferData, 0, 0);
 	
 	float angle = std::abs(std::remainder(elapsed * factor, range * 2));
 	SimpleHierarchy::SimpleRotations rotations;
@@ -135,7 +135,7 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext)
 	rotations[SMPL_SKELETON_POSITION_ELBOW_LEFT] =
 		DirectX::XMQuaternionRotationMatrix(DirectX::XMMatrixRotationY(angle/5.f));
 	rotations[SMPL_SKELETON_POSITION_HIP_RIGHT] = 
-		DirectX::XMQuaternionRotationMatrix(DirectX::XMMatrixRotationX(angle));
+		DirectX::XMQuaternionRotationMatrix(DirectX::XMMatrixRotationX(-angle));
 	rotations[SMPL_SKELETON_POSITION_KNEE_RIGHT] =
 		DirectX::XMQuaternionRotationMatrix(DirectX::XMMatrixRotationX(angle));
 
@@ -154,7 +154,7 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext)
 	// Set the vertex and pixel shader stage state.
 	pd3dDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
 	pd3dDeviceContext->VSSetConstantBuffers(0, 1, &m_pVertexConstantBuffer);
-	pd3dDeviceContext->VSSetConstantBuffers(1, 2, &m_pHierarchyConstantBuffer);
+	pd3dDeviceContext->VSSetConstantBuffers(1, 1, &m_pHierarchyConstantBuffer);
 	pd3dDeviceContext->PSSetShader(m_pPixelShader, nullptr,	0);
 
 	// Draw the cube.
@@ -241,7 +241,8 @@ void SimpleModel::computeFaceNormals(std::vector<SimpleVertex>& vertices, const 
 
 		DirectX::XMVECTOR u = DirectX::XMVectorSubtract(DirectX::XMLoadFloat3(&v1), DirectX::XMLoadFloat3(&v2));
 		DirectX::XMVECTOR v = DirectX::XMVectorSubtract(DirectX::XMLoadFloat3(&v1), DirectX::XMLoadFloat3(&v3));
-		DirectX::XMVECTOR n = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(u, v));
+		DirectX::XMVECTOR c = DirectX::XMVector3Cross(u, v);
+		DirectX::XMVECTOR n = DirectX::XMVector3Normalize(c);
 
 		normals[i1][n_count[i1]] = n;
 		normals[i2][n_count[i2]] = n;
