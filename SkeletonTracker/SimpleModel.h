@@ -49,6 +49,8 @@ private:
 	SimpleHierarchy m_Hierarchy;
 	SimpleHierarchy::HierarchyConstantBuffer m_HierarchyConstantBufferData;
 
+	ID3D11ShaderResourceView*  m_pPosedirsSRV = nullptr;
+
 	void readObjFile(const std::wstring& filename,
 		std::vector<SimpleVertex>& vertices, std::vector<unsigned short>& indices);
 

@@ -5,6 +5,7 @@
 #define VERTEX_COUNT 6890
 #define FACE_COUNT 13776
 #define MAX_TRIANGLES_PER_VERTEX 9
+#define SMPL_POSEDIRS_COUNT 207
 
 void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::wstring& modelFilename,
 	const std::wstring& vertexShaderFilename, const std::wstring& pixelShaderFilename,
@@ -107,6 +108,43 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::wstring& modelFile
 		VALIDATE(pd3dDevice->CreateBuffer(&constantBufferDesc, nullptr, &m_pHierarchyConstantBuffer),
 			L"Could not create HierarchyConstantBuffer");
 	}
+
+	float* posedirs = new float[VERTEX_COUNT * 207 * 3];
+	for (size_t i = 0; i < VERTEX_COUNT * 207 * 3; i++)
+	{
+		posedirs[i] = (float)i;
+ 	}
+
+	{
+		D3D11_BUFFER_DESC posedirsBufferDesc = { 0 };
+		posedirsBufferDesc.ByteWidth = sizeof(float)* VERTEX_COUNT * SMPL_POSEDIRS_COUNT * 3;
+		posedirsBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
+		posedirsBufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+		posedirsBufferDesc.CPUAccessFlags = 0;
+		posedirsBufferDesc.MiscFlags = 0;
+		posedirsBufferDesc.StructureByteStride = 0;
+
+		D3D11_SUBRESOURCE_DATA posedirsBufferData;
+		posedirsBufferData.pSysMem = posedirs;
+		posedirsBufferData.SysMemPitch = 0;
+		posedirsBufferData.SysMemSlicePitch = 0;
+
+		ID3D11Buffer* pPosedirsConstantBuffer;
+
+		VALIDATE(pd3dDevice->CreateBuffer(&posedirsBufferDesc, &posedirsBufferData, &pPosedirsConstantBuffer),
+			L"Could not create posedirs");
+		
+		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+		srvDesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
+		srvDesc.ViewDimension = D3D_SRV_DIMENSION_BUFFER;
+		srvDesc.Buffer.FirstElement = 0;
+		srvDesc.Buffer.NumElements = VERTEX_COUNT * SMPL_POSEDIRS_COUNT;
+
+		VALIDATE(pd3dDevice->CreateShaderResourceView(pPosedirsConstantBuffer, &srvDesc, &m_pPosedirsSRV),
+			L"Could not create posedirs SRV");
+	}
+
+	delete[] posedirs;
 }
 
 void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext)
@@ -155,6 +193,7 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext)
 	pd3dDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
 	pd3dDeviceContext->VSSetConstantBuffers(0, 1, &m_pVertexConstantBuffer);
 	pd3dDeviceContext->VSSetConstantBuffers(1, 1, &m_pHierarchyConstantBuffer);
+	pd3dDeviceContext->VSSetShaderResources(0, 1, &m_pPosedirsSRV);
 	pd3dDeviceContext->PSSetShader(m_pPixelShader, nullptr,	0);
 
 	// Draw the cube.
@@ -225,7 +264,7 @@ void SimpleModel::readObjFile(const std::wstring& filename,
 void SimpleModel::computeFaceNormals(std::vector<SimpleVertex>& vertices, const std::vector<unsigned short>& indices)
 {
 	unsigned short n_count[VERTEX_COUNT];
-	DirectX::XMVECTOR normals[VERTEX_COUNT][MAX_TRIANGLES_PER_VERTEX];
+	DirectX::XMFLOAT3 normals[VERTEX_COUNT][MAX_TRIANGLES_PER_VERTEX];
 	ZeroMemory(n_count, sizeof(n_count));
 	ZeroMemory(normals, sizeof(normals));
 
@@ -241,12 +280,11 @@ void SimpleModel::computeFaceNormals(std::vector<SimpleVertex>& vertices, const 
 
 		DirectX::XMVECTOR u = DirectX::XMVectorSubtract(DirectX::XMLoadFloat3(&v1), DirectX::XMLoadFloat3(&v2));
 		DirectX::XMVECTOR v = DirectX::XMVectorSubtract(DirectX::XMLoadFloat3(&v1), DirectX::XMLoadFloat3(&v3));
-		DirectX::XMVECTOR c = DirectX::XMVector3Cross(u, v);
-		DirectX::XMVECTOR n = DirectX::XMVector3Normalize(c);
+		DirectX::XMVECTOR n = DirectX::XMVector3Normalize(DirectX::XMVector3Cross(u, v));
 
-		normals[i1][n_count[i1]] = n;
-		normals[i2][n_count[i2]] = n;
-		normals[i3][n_count[i3]] = n;
+		DirectX::XMStoreFloat3(&normals[i1][n_count[i1]], n);
+		DirectX::XMStoreFloat3(&normals[i2][n_count[i2]], n);
+		DirectX::XMStoreFloat3(&normals[i3][n_count[i3]], n);
 
 		n_count[i1]++;
 		n_count[i2]++;
@@ -258,14 +296,14 @@ void SimpleModel::computeFaceNormals(std::vector<SimpleVertex>& vertices, const 
 		DirectX::XMVECTOR acc(DirectX::XMVectorZero());
 		for (unsigned short j = 0; j < n_count[i]; j++)
 		{
-			acc = DirectX::XMVectorAdd(acc, normals[i][j]);
+			acc = DirectX::XMVectorAdd(acc, DirectX::XMLoadFloat3(&normals[i][j]));
 		}
 		acc = DirectX::XMVector3Normalize(acc);
 		
-		DirectX::XMFLOAT3 f3_acc;
-		DirectX::XMStoreFloat3(&f3_acc, acc);
-		vertices[i].nor[0] = f3_acc.x;
-		vertices[i].nor[1] = f3_acc.y;
-		vertices[i].nor[2] = f3_acc.z;
+		DirectX::XMFLOAT3 temp_acc;
+		DirectX::XMStoreFloat3(&temp_acc, acc);
+		vertices[i].nor[0] = temp_acc.x;
+		vertices[i].nor[1] = temp_acc.y;
+		vertices[i].nor[2] = temp_acc.z;
 	}
 }

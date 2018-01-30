@@ -1,7 +1,7 @@
 #include "Common.hlsli"
 
 #define SMPL_SKELETON_POSITION_COUNT 24
-#define SMPL_POSDIRS_COUNT 207
+#define SMPL_POSEDIRS_COUNT 207
 
 cbuffer vertexConstantBuffer : register(b0)
 {
@@ -15,15 +15,12 @@ cbuffer hierarchyConstantBuffer : register(b1)
 	matrix transform[SMPL_SKELETON_POSITION_COUNT];
 };
 
-//cbuffer posedirsConstantBuffer : register(b2)
-//{
-//	float3 posdirs[SMPL_POSDIRS_COUNT];
-//}
+cbuffer thetaConstantBuffer : register(b2)
+{
+	float theta[SMPL_POSEDIRS_COUNT];
+};
 
-//cbuffer thetaConstantBuffer : register(b3)
-//{
-//	float poscoef[SMPL_POSDIRS_COUNT];
-//}
+Buffer<float3> posedirs : register(t0);
 
 struct VertexShaderInput
 {
@@ -41,11 +38,16 @@ struct LBSOutput
 	float3 nor : NORMAL;
 };
 
-//float3 SMPLPoseCorrection(uint id : SV_VertexID)
-//{
-//	float3 pos = posedirs[id];
-//	return pos;
-//}
+float3 SMPLPoseCorrection(uint id : SV_VertexID)
+{
+	float3 output = (float3)0;
+	for (uint i = 0; i < SMPL_POSEDIRS_COUNT; i++)
+	{
+		output += theta[i] * posedirs[id*SMPL_POSEDIRS_COUNT + i];
+	}
+
+	return output;
+}
 
 LBSOutput LinearBlendSkinning(VertexShaderInput input)
 {
@@ -62,9 +64,10 @@ LBSOutput LinearBlendSkinning(VertexShaderInput input)
 	return output;
 }
 
-PixelShaderInput SimpleVertexShader(VertexShaderInput input)
+PixelShaderInput SimpleVertexShader(VertexShaderInput input, uint id : SV_VertexID)
 {
 	PixelShaderInput output = (PixelShaderInput)0;
+	SMPLPoseCorrection(id);
 	LBSOutput lbs = LinearBlendSkinning(input);
 	
 	float4 posView = mul(float4(lbs.pos, 1.f), worldView);
