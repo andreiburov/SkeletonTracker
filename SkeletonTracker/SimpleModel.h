@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SimpleHierarchy.h"
+#include "SimplePose.h"
 
 class SimpleModel
 {
@@ -49,9 +50,12 @@ private:
 	// Hierarchy for Linear Blend Skinning
 	ID3D11Buffer* m_pHierarchyConstantBuffer = nullptr;
 	SimpleHierarchy m_Hierarchy;
-	SimpleHierarchy::HierarchyConstantBuffer m_HierarchyConstantBufferData;
 
-	// Per-vertex basis of position directions
+	// Thetas for SMPL
+	ID3D11Buffer* m_pPoseConstantBuffer = nullptr;
+	SimplePose m_Pose;
+
+	// Per-vertex basis of position directions for SMPL
 	ID3D11ShaderResourceView*  m_pPosedirsSRV = nullptr;
 
 	void readObjFile(const std::string& modelFilename, const std::string& posedirsFilename,

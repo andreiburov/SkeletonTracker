@@ -57,6 +57,29 @@ const int SMPL_INDEX_FROM_KINECT_INDEX[NUI_SKELETON_POSITION_COUNT] = {
 	SMPL_SKELETON_POSITION_FOOT_RIGHT,
 };
 
+struct SimpleRotations {
+	DirectX::XMVECTOR rotation[SMPL_SKELETON_POSITION_COUNT];
+
+	SimpleRotations()
+	{
+		ZeroMemory(rotation, sizeof(rotation));
+		for (unsigned short i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
+		{
+			rotation[i] = DirectX::XMQuaternionIdentity();
+		}
+	}
+
+	DirectX::XMVECTOR operator[](_SMPL_SKELETON_POSITION_INDEX i) const
+	{
+		return rotation[i];
+	}
+
+	DirectX::XMVECTOR& operator[](_SMPL_SKELETON_POSITION_INDEX i)
+	{
+		return rotation[i];
+	}
+};
+
 class SimpleSkeleton : public Skeleton 
 {
 private:

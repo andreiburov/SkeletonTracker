@@ -37,7 +37,7 @@ SimpleHierarchy::SimpleHierarchy()
 	}
 }
 
-void SimpleHierarchy::Update(const SimpleRotations& rotations, HierarchyConstantBuffer& hierarchy)
+void SimpleHierarchy::Update(const SimpleRotations& rotations)
 {
 	DirectX::XMMATRIX transform[SMPL_SKELETON_POSITION_COUNT];
 	transform[0] = DirectX::XMMatrixAffineTransformation(DirectX::XMVectorSet(1, 1, 1, 1), 
@@ -56,6 +56,6 @@ void SimpleHierarchy::Update(const SimpleRotations& rotations, HierarchyConstant
 	for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
 	{
 		// Transpose, because HLSL expects matrices in the column major form
-		DirectX::XMStoreFloat4x4(&hierarchy.transform[i], DirectX::XMMatrixTranspose(transform[i]));
+		DirectX::XMStoreFloat4x4(&m_Transform[i], DirectX::XMMatrixTranspose(transform[i]));
 	}
 }

@@ -6,35 +6,11 @@ class SimpleHierarchy
 {
 public:
 
-	struct SimpleRotations {
-		DirectX::XMVECTOR rotation[SMPL_SKELETON_POSITION_COUNT];
-
-		SimpleRotations()
-		{
-			ZeroMemory(rotation, sizeof(rotation));
-			for (unsigned short i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
-			{
-				rotation[i] = DirectX::XMQuaternionIdentity();
-			}
-		}
-
-		DirectX::XMVECTOR operator[](_SMPL_SKELETON_POSITION_INDEX i) const
-		{
-			return rotation[i];
-		}
-
-		DirectX::XMVECTOR& operator[](_SMPL_SKELETON_POSITION_INDEX i)
-		{
-			return rotation[i];
-		}
-	};
-
-	struct HierarchyConstantBuffer {
-		DirectX::XMFLOAT4X4 transform[SMPL_SKELETON_POSITION_COUNT];
-	};
-
 	SimpleHierarchy();
-	void Update(const SimpleRotations& rotations, HierarchyConstantBuffer& hierarchy);
+
+	unsigned int getByteWidth() { return sizeof(m_Transform);	}
+	void* getHierarchyConstantBuffer() { return &m_Transform; }
+	void Update(const SimpleRotations& rotations);
 
 private:
 
@@ -65,5 +41,6 @@ private:
 		SMPL_SKELETON_POSITION_WRIST_LEFT
 	};
 
+	DirectX::XMFLOAT4X4 m_Transform[SMPL_SKELETON_POSITION_COUNT];
 	DirectX::XMVECTOR m_Joints[SMPL_SKELETON_POSITION_COUNT];
 };

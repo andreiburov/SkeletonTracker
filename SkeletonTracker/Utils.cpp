@@ -66,6 +66,18 @@ namespace util {
 		return v;
 	}
 
+	DirectX::XMVECTOR AxisAngleFromQuaternion(DirectX::XMVECTOR quaternion)
+	{
+		DirectX::XMFLOAT3 output;
+		DirectX::XMVECTOR axis;
+		float angle;
+
+		DirectX::XMQuaternionToAxisAngle(&axis, &angle, quaternion);
+		axis = DirectX::XMVector3Normalize(axis);
+		if (angle < 0) angle += DirectX::XM_2PI;
+		return DirectX::XMVectorScale(axis, angle);
+	}
+
 	std::wostream& operator<<(std::wostream& out, const Vec4& v)
 	{
 		out << v.x << L" " << v.y << L" " << v.z << L" " << v.z;

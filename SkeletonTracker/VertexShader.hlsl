@@ -67,7 +67,7 @@ LBSOutput LinearBlendSkinning(VertexShaderInput input)
 PixelShaderInput SimpleVertexShader(VertexShaderInput input, uint id : SV_VertexID)
 {
 	PixelShaderInput output = (PixelShaderInput)0;
-	SMPLPoseCorrection(id);
+	input.pos += SMPLPoseCorrection(id);
 	LBSOutput lbs = LinearBlendSkinning(input);
 	
 	float4 posView = mul(float4(lbs.pos, 1.f), worldView);

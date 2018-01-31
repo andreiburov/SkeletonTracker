@@ -163,6 +163,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="SimpleHierarchy.h" />
     <ClInclude Include="SimpleModel.h" />
+    <ClInclude Include="SimplePose.h" />
     <ClInclude Include="SimpleSkeleton.h" />
     <ClInclude Include="KinectSkeleton.h" />
     <ClInclude Include="Skeleton.h" />
@@ -174,6 +175,7 @@
     <ClCompile Include="Application.cpp" />
     <ClCompile Include="SimpleHierarchy.cpp" />
     <ClCompile Include="SimpleModel.cpp" />
+    <ClCompile Include="SimplePose.cpp" />
     <ClCompile Include="SimpleSkeleton.cpp" />
     <ClCompile Include="KinectSkeleton.cpp" />
     <ClCompile Include="Skeleton.cpp" />

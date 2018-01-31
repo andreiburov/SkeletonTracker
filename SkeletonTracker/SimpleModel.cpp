@@ -54,7 +54,7 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilen
 	VALIDATE(pd3dDevice->CreateBuffer(&vertexBufferDesc, &vertexBufferData,
 		&m_pVertexBuffer), L"Could not create VertexBuffer");
 
-	m_IndicesCount = indices.size();
+	m_IndicesCount = (unsigned int)indices.size();
 
 	D3D11_BUFFER_DESC indexBufferDesc;
 	indexBufferDesc.ByteWidth = sizeof(unsigned short) * (unsigned int)indices.size();
@@ -99,7 +99,7 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilen
 	// Create hierarchy ConstantBuffer for linear blend skinning
 	{
 		D3D11_BUFFER_DESC constantBufferDesc = { 0 };
-		constantBufferDesc.ByteWidth = sizeof(m_HierarchyConstantBufferData);
+		constantBufferDesc.ByteWidth = m_Hierarchy.getByteWidth();
 		constantBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 		constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		constantBufferDesc.CPUAccessFlags = 0;
@@ -110,19 +110,19 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilen
 			L"Could not create HierarchyConstantBuffer");
 	}
 
-	// Create theta ConstantBuffer for linear blend skinning
-	/*{
+	// Create pose ConstantBuffer for SMPL
+	{
 		D3D11_BUFFER_DESC constantBufferDesc = { 0 };
-		constantBufferDesc.ByteWidth = sizeof(m_HierarchyConstantBufferData);
+		constantBufferDesc.ByteWidth = m_Pose.getByteWidth();
 		constantBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 		constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		constantBufferDesc.CPUAccessFlags = 0;
 		constantBufferDesc.MiscFlags = 0;
 		constantBufferDesc.StructureByteStride = 0;
 
-		VALIDATE(pd3dDevice->CreateBuffer(&constantBufferDesc, nullptr, &m_pHierarchyConstantBuffer),
-			L"Could not create HierarchyConstantBuffer");
-	}*/
+		VALIDATE(pd3dDevice->CreateBuffer(&constantBufferDesc, nullptr, &m_pPoseConstantBuffer),
+			L"Could not create PoseConstantBuffer");
+	}
 
 	{
 		D3D11_BUFFER_DESC posedirsBufferDesc = { 0 };
@@ -176,7 +176,7 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext)
 	pd3dDeviceContext->UpdateSubresource(m_pVertexConstantBuffer, 0, nullptr, &m_VertexConstantBufferData, 0, 0);
 	
 	float angle = std::abs(std::remainder(elapsed * factor, range * 2));
-	SimpleHierarchy::SimpleRotations rotations;
+	SimpleRotations rotations;
 	rotations[SMPL_SKELETON_POSITION_WRIST_LEFT] = 
 		DirectX::XMQuaternionRotationMatrix(DirectX::XMMatrixRotationZ(angle/10.f));
 	rotations[SMPL_SKELETON_POSITION_ELBOW_LEFT] =
@@ -186,8 +186,11 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext)
 	rotations[SMPL_SKELETON_POSITION_KNEE_RIGHT] =
 		DirectX::XMQuaternionRotationMatrix(DirectX::XMMatrixRotationX(angle));
 
-	m_Hierarchy.Update(rotations, m_HierarchyConstantBufferData);
-	pd3dDeviceContext->UpdateSubresource(m_pHierarchyConstantBuffer, 0, nullptr, &m_HierarchyConstantBufferData, 0, 0);
+	m_Hierarchy.Update(rotations);
+	pd3dDeviceContext->UpdateSubresource(m_pHierarchyConstantBuffer, 0, nullptr, m_Hierarchy.getHierarchyConstantBuffer(), 0, 0);
+	
+	m_Pose.Update(rotations);
+	pd3dDeviceContext->UpdateSubresource(m_pPoseConstantBuffer, 0, nullptr, m_Pose.getPoseConstantBuffer(), 0, 0);
 
 	pd3dDeviceContext->IASetInputLayout(m_pInputLayout);
 
@@ -202,6 +205,7 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext)
 	pd3dDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
 	pd3dDeviceContext->VSSetConstantBuffers(0, 1, &m_pVertexConstantBuffer);
 	pd3dDeviceContext->VSSetConstantBuffers(1, 1, &m_pHierarchyConstantBuffer);
+	pd3dDeviceContext->VSSetConstantBuffers(2, 1, &m_pPoseConstantBuffer);
 	pd3dDeviceContext->VSSetShaderResources(0, 1, &m_pPosedirsSRV);
 	pd3dDeviceContext->PSSetShader(m_pPixelShader, nullptr,	0);
 
