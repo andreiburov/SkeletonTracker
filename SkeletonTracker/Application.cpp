@@ -106,8 +106,9 @@ int Application::Run(HINSTANCE hInstance, int nCmdShow)
 
 		// Explicitly check the Kinect frame event since MsgWaitForMultipleObjects
 		// can return for other reasons even though it is signaled.
-		CheckKinectData();
-		RenderSimpleModel();
+		SimpleRotations rotations;
+		CheckKinectData(rotations);
+		RenderSimpleModel(rotations);
 
 		if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
 		{
@@ -131,7 +132,7 @@ int Application::Run(HINSTANCE hInstance, int nCmdShow)
 /// <summary>
 /// Main processing function
 /// </summary>
-void Application::CheckKinectData()
+void Application::CheckKinectData(SimpleRotations& rotations)
 {
 	if (NULL == m_pNuiSensor)
 	{
@@ -141,7 +142,7 @@ void Application::CheckKinectData()
 	// Wait for 0ms, just quickly test if it is time to process a skeleton
 	if (WAIT_OBJECT_0 == WaitForSingleObject(m_hNextSkeletonEvent, 0))
 	{
-		ProcessSkeleton();
+		ProcessSkeleton(rotations);
 	}
 }
 
@@ -351,7 +352,7 @@ HRESULT Application::CreateFirstConnected()
 /// <summary>
 /// Handle new skeleton data
 /// </summary>
-void Application::ProcessSkeleton()
+void Application::ProcessSkeleton(SimpleRotations& rotations)
 {
 	RECT rct;
 	GetClientRect(GetDlgItem(m_hWnd, IDC_VIEW_ONE), &rct);
@@ -399,6 +400,11 @@ void Application::ProcessSkeleton()
 	{
 		hr = S_OK;
 		DiscardDirect2DResources();
+	}
+
+	if (m_KinectSkeleton.isTposeCalibrated())
+	{
+		m_KinectSkeleton.GetSimplePose(rotations);
 	}
 }
 
@@ -611,13 +617,13 @@ HRESULT Application::InitDevice()
 //--------------------------------------------------------------------------------------
 // Render the frame
 //--------------------------------------------------------------------------------------
-void Application::RenderSimpleModel()
+void Application::RenderSimpleModel(const SimpleRotations& rotations)
 {
 	// Just clear the backbuffer
 	m_pImmediateContext->ClearRenderTargetView(m_pRenderTargetView, DirectX::Colors::MidnightBlue);
 	m_pImmediateContext->ClearDepthStencilView(m_pDepthStencilView,	D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-	m_SimpleModel.Render(m_pImmediateContext);
+	m_SimpleModel.Render(m_pImmediateContext, rotations);
 
 	m_pSwapChain->Present(1, 0);
 }

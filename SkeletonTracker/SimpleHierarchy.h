@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SimpleSkeleton.h"
+#include "SimpleDefinitions.h"
 
 class SimpleHierarchy
 {

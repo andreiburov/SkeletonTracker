@@ -161,6 +161,7 @@
   <ItemGroup>
     <ClInclude Include="Application.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="SimpleDefinitions.h" />
     <ClInclude Include="SimpleHierarchy.h" />
     <ClInclude Include="SimpleModel.h" />
     <ClInclude Include="SimplePose.h" />

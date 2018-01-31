@@ -51,6 +51,9 @@
     <ClInclude Include="SimplePose.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SimpleDefinitions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

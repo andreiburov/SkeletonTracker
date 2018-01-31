@@ -160,9 +160,9 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilen
 	delete[] posedirs;
 }
 
-void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext)
+void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext, const SimpleRotations& rotations)
 {
-	static float degree = 0.f;
+	static float degree = DirectX::XM_PI;
 	static float elapsed = 0.f;
 	static const float factor = 3;
 	static const float range = DirectX::XM_PIDIV2/3.f;
@@ -174,21 +174,10 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext)
 	DirectX::XMStoreFloat4x4(&m_VertexConstantBufferData.worldViewIT, 
 		DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(nullptr, DirectX::XMMatrixTranspose(transform))));
 
-	degree += 0.01f;
-	elapsed += 0.01f;
+	//degree += 0.01f;
+	//elapsed += 0.01f;
 
 	pd3dDeviceContext->UpdateSubresource(m_pVertexMatricesConstantBuffer, 0, nullptr, &m_VertexConstantBufferData, 0, 0);
-	
-	float angle = std::abs(std::remainder(elapsed * factor, range * 2));
-	SimpleRotations rotations;
-	rotations[SMPL_SKELETON_POSITION_WRIST_LEFT] = 
-		DirectX::XMQuaternionRotationMatrix(DirectX::XMMatrixRotationZ(angle/10.f));
-	rotations[SMPL_SKELETON_POSITION_ELBOW_LEFT] =
-		DirectX::XMQuaternionRotationMatrix(DirectX::XMMatrixRotationY(angle/5.f));
-	rotations[SMPL_SKELETON_POSITION_HIP_RIGHT] = 
-		DirectX::XMQuaternionRotationMatrix(DirectX::XMMatrixRotationX(-angle));
-	rotations[SMPL_SKELETON_POSITION_KNEE_RIGHT] =
-		DirectX::XMQuaternionRotationMatrix(DirectX::XMMatrixRotationX(angle));
 
 	m_Hierarchy.Update(rotations);
 	pd3dDeviceContext->UpdateSubresource(m_pHierarchyConstantBuffer, 0, nullptr, m_Hierarchy.getHierarchyConstantBuffer(), 0, 0);

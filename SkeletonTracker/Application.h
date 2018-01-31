@@ -85,17 +85,17 @@ private:
 	/// <returns>S_OK on success, otherwise failure code</returns>
 	HRESULT                 CreateFirstConnected();
 
-	void                    CheckKinectData();
+	void                    CheckKinectData(SimpleRotations& rotations);
 
 	/// <summary>
 	/// Handle new skeleton data
 	/// </summary>
-	void                    ProcessSkeleton();
+	void                    ProcessSkeleton(SimpleRotations& rotations);
 	
 	// Direct3D
 	HRESULT					InitDevice();
 	void					CleanupDevice();
-	void					RenderSimpleModel();
+	void					RenderSimpleModel(const SimpleRotations& rotations);
 
 	/// <summary>
 	/// Ensure necessary Direct2d resources are created
