@@ -25,8 +25,8 @@ public:
 	SimpleModel() {}
 	~SimpleModel() { Clear(); }
 
-	void Create(ID3D11Device* pd3dDevice, const std::wstring& modelFilename,
-		const std::wstring& vertexShaderFileName, 
+	void Create(ID3D11Device* pd3dDevice, const std::string& modelFilename,
+		const std::string& posedirsFilename, const std::wstring& vertexShaderFileName, 
 		const std::wstring& pixelShaderFilename, float aspectRatio);
 
 	void Render(ID3D11DeviceContext*);
@@ -39,20 +39,24 @@ private:
 	ID3D11PixelShader* m_pPixelShader = nullptr;
 	ID3D11Buffer* m_pVertexBuffer = nullptr;
 	ID3D11Buffer* m_pIndexBuffer = nullptr;
+	unsigned int m_IndicesCount = 0;
+	
+	// World/View/Perspective Matrices
 	ID3D11Buffer* m_pVertexConstantBuffer = nullptr; 
 	VertexConstantBuffer m_VertexConstantBufferData;
-
 	DirectX::XMMATRIX m_View;
-	size_t m_IndicesCount = 0;
 
+	// Hierarchy for Linear Blend Skinning
 	ID3D11Buffer* m_pHierarchyConstantBuffer = nullptr;
 	SimpleHierarchy m_Hierarchy;
 	SimpleHierarchy::HierarchyConstantBuffer m_HierarchyConstantBufferData;
 
+	// Per-vertex basis of position directions
 	ID3D11ShaderResourceView*  m_pPosedirsSRV = nullptr;
 
-	void readObjFile(const std::wstring& filename,
-		std::vector<SimpleVertex>& vertices, std::vector<unsigned short>& indices);
+	void readObjFile(const std::string& modelFilename, const std::string& posedirsFilename,
+		std::vector<SimpleVertex>& vertices, std::vector<unsigned short>& indices,
+		float*& posedirs);
 
 	void computeFaceNormals(std::vector<SimpleVertex>& vertices, const std::vector<unsigned short>& indices);
 };
