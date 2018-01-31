@@ -207,8 +207,8 @@ LRESULT CALLBACK Application::DlgProc(HWND hWnd, UINT message, WPARAM wParam, LP
 
 		// Create Simple Model
 		m_SimpleModel.Create(m_pd3dDevice, "SimpleModel/smpl.obj", 
-			"SimpleModel/smpl.posedirs", L"VertexShader.cso", L"PixelShader.cso", 
-			m_aspectRatio);
+			"SimpleModel/smpl.posedirs", L"VertexShader.cso", 
+			L"GeometryShader.cso", L"PixelShader.cso", m_aspectRatio);
 	}
 	break;
 

@@ -10,7 +10,7 @@
 
 void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilename,
 	const std::string& posedirsFilename, const std::wstring& vertexShaderFilename, 
-	const std::wstring& pixelShaderFilename, float aspectRatio)
+	const std::wstring& geometryShaderFilename,	const std::wstring& pixelShaderFilename, float aspectRatio)
 {
 	const D3D11_INPUT_ELEMENT_DESC vertexLayoutDesc[] =
 	{
@@ -27,6 +27,10 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilen
 	VALIDATE(pd3dDevice->CreateInputLayout(vertexLayoutDesc, ARRAYSIZE(vertexLayoutDesc),
 		vertexShader.data(), vertexShader.size(), &m_pInputLayout), L"Could not create InputLayout");
 
+	std::vector<byte> geometryShader = util::readShaderFromCSO(geometryShaderFilename);
+	VALIDATE(pd3dDevice->CreateGeometryShader(geometryShader.data(), geometryShader.size(),
+		nullptr, &m_pGeometryShader), L"Could not create GeometryShader");
+	
 	std::vector<byte> pixelShader = util::readShaderFromCSO(pixelShaderFilename);
 	VALIDATE(pd3dDevice->CreatePixelShader(pixelShader.data(), pixelShader.size(),
 		nullptr, &m_pPixelShader), L"Could not create PixelShader");
@@ -36,7 +40,7 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilen
 	float* posedirs = new float[SMPL_POSEDIRS_ELEMENTS_COUNT];
 
 	readObjFile(modelFilename, posedirsFilename, vertices, indices, posedirs);
-	computeFaceNormals(vertices, indices);
+	//computeFaceNormals(vertices, indices);
 
 	D3D11_BUFFER_DESC vertexBufferDesc = { 0 };
 	vertexBufferDesc.ByteWidth = sizeof(SimpleVertex) * (unsigned int)vertices.size();
@@ -82,7 +86,7 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilen
 		constantBufferDesc.MiscFlags = 0;
 		constantBufferDesc.StructureByteStride = 0;
 
-		VALIDATE(pd3dDevice->CreateBuffer(&constantBufferDesc, nullptr, &m_pVertexConstantBuffer),
+		VALIDATE(pd3dDevice->CreateBuffer(&constantBufferDesc, nullptr, &m_pVertexMatricesConstantBuffer),
 			L"Could not create VertexConstantBuffer");
 	}
 
@@ -173,7 +177,7 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext)
 	degree += 0.01f;
 	elapsed += 0.01f;
 
-	pd3dDeviceContext->UpdateSubresource(m_pVertexConstantBuffer, 0, nullptr, &m_VertexConstantBufferData, 0, 0);
+	pd3dDeviceContext->UpdateSubresource(m_pVertexMatricesConstantBuffer, 0, nullptr, &m_VertexConstantBufferData, 0, 0);
 	
 	float angle = std::abs(std::remainder(elapsed * factor, range * 2));
 	SimpleRotations rotations;
@@ -203,10 +207,13 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext)
 
 	// Set the vertex and pixel shader stage state
 	pd3dDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
-	pd3dDeviceContext->VSSetConstantBuffers(0, 1, &m_pVertexConstantBuffer);
-	pd3dDeviceContext->VSSetConstantBuffers(1, 1, &m_pHierarchyConstantBuffer);
-	pd3dDeviceContext->VSSetConstantBuffers(2, 1, &m_pPoseConstantBuffer);
+	pd3dDeviceContext->VSSetConstantBuffers(0, 1, &m_pHierarchyConstantBuffer);
+	pd3dDeviceContext->VSSetConstantBuffers(1, 1, &m_pPoseConstantBuffer);
 	pd3dDeviceContext->VSSetShaderResources(0, 1, &m_pPosedirsSRV);
+
+	pd3dDeviceContext->GSSetShader(m_pGeometryShader, nullptr, 0);
+	pd3dDeviceContext->GSSetConstantBuffers(0, 1, &m_pVertexMatricesConstantBuffer);
+
 	pd3dDeviceContext->PSSetShader(m_pPixelShader, nullptr,	0);
 
 	// Draw the cube
@@ -220,7 +227,7 @@ void SimpleModel::Clear()
 	SAFE_RELEASE(m_pPixelShader);
 	SAFE_RELEASE(m_pVertexBuffer);
 	SAFE_RELEASE(m_pIndexBuffer);
-	SAFE_RELEASE(m_pVertexConstantBuffer);
+	SAFE_RELEASE(m_pVertexMatricesConstantBuffer);
 	SAFE_RELEASE(m_pHierarchyConstantBuffer);
 	SAFE_RELEASE(m_pPosedirsSRV);
 }

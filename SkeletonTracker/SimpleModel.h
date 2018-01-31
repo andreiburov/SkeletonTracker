@@ -27,8 +27,8 @@ public:
 	~SimpleModel() { Clear(); }
 
 	void Create(ID3D11Device* pd3dDevice, const std::string& modelFilename,
-		const std::string& posedirsFilename, const std::wstring& vertexShaderFileName, 
-		const std::wstring& pixelShaderFilename, float aspectRatio);
+		const std::string& posedirsFilename, const std::wstring& vertexShaderFileName,
+		const std::wstring& geometryShaderFilename,	const std::wstring& pixelShaderFilename, float aspectRatio);
 
 	void Render(ID3D11DeviceContext*);
 
@@ -37,13 +37,15 @@ public:
 private:
 	ID3D11InputLayout * m_pInputLayout = nullptr;
 	ID3D11VertexShader* m_pVertexShader = nullptr;
+	ID3D11GeometryShader* m_pGeometryShader = nullptr;
 	ID3D11PixelShader* m_pPixelShader = nullptr;
+
 	ID3D11Buffer* m_pVertexBuffer = nullptr;
 	ID3D11Buffer* m_pIndexBuffer = nullptr;
 	unsigned int m_IndicesCount = 0;
 	
 	// World/View/Perspective Matrices
-	ID3D11Buffer* m_pVertexConstantBuffer = nullptr; 
+	ID3D11Buffer* m_pVertexMatricesConstantBuffer = nullptr; 
 	VertexConstantBuffer m_VertexConstantBufferData;
 	DirectX::XMMATRIX m_View;
 

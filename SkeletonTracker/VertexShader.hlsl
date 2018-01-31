@@ -3,19 +3,12 @@
 #define SMPL_SKELETON_POSITION_COUNT 24
 #define SMPL_POSEDIRS_COUNT 207
 
-cbuffer vertexConstantBuffer : register(b0)
-{
-	matrix worldView;
-	matrix projection;
-	matrix worldViewIT; // Inverse Transpose
-};
-
-cbuffer hierarchyConstantBuffer : register(b1)
+cbuffer hierarchyConstantBuffer : register(b0)
 {
 	matrix transform[SMPL_SKELETON_POSITION_COUNT];
 };
 
-cbuffer thetaConstantBuffer : register(b2)
+cbuffer thetaConstantBuffer : register(b1)
 {
 	float theta[SMPL_POSEDIRS_COUNT];
 };
@@ -64,16 +57,12 @@ LBSOutput LinearBlendSkinning(VertexShaderInput input)
 	return output;
 }
 
-PixelShaderInput SimpleVertexShader(VertexShaderInput input, uint id : SV_VertexID)
+GeometryShaderInput main(VertexShaderInput input, uint id : SV_VertexID)
 {
-	PixelShaderInput output = (PixelShaderInput)0;
+	GeometryShaderInput output = (GeometryShaderInput)0;
 	input.pos += SMPLPoseCorrection(id);
 	LBSOutput lbs = LinearBlendSkinning(input);
-	
-	float4 posView = mul(float4(lbs.pos, 1.f), worldView);
-	output.posView = posView.xyz;
-	output.norView = mul(lbs.nor, (float3x3)worldViewIT);
-	output.pos = mul(posView, projection);
+	output.pos = float4(lbs.pos, 1.f);
 
 	return output;
 }
