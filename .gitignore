@@ -4,10 +4,8 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 # Project specifics
-*.obj
-!SkeletonTracker/SimpleModel/*.obj
-Joints/
 Rotations/
+Joints/
 
 # Compiled Shader Object
 *.cso

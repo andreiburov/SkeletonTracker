@@ -8,7 +8,7 @@ SimpleSkeleton::SimpleSkeleton(const float jointThickness, const float boneThick
 	ZeroMemory(&m_JointsRest, sizeof(Vector4)*SMPL_SKELETON_POSITION_COUNT);
 	ZeroMemory(&m_JointsPose, sizeof(Vector4)*SMPL_SKELETON_POSITION_COUNT);
 
-	std::ifstream in("Joints/SMPL_Rest.obj", std::ios::in);
+	std::ifstream in("SimpleModel/smpl_skeleton.obj", std::ios::in);
 	for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
 	{
 		std::string vertex;
