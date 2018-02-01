@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "SimpleHierarchy.h"
+#include "Utils.h"
 
 SimpleHierarchy::SimpleHierarchy()
 {
@@ -37,14 +38,14 @@ SimpleHierarchy::SimpleHierarchy()
 	}
 }
 
-void SimpleHierarchy::Update(const SimpleRotations& rotations)
+void SimpleHierarchy::Update(const SimpleRotations& rotations, bool traceable)
 {
 	DirectX::XMMATRIX transform[SMPL_SKELETON_POSITION_COUNT];
 	transform[0] = DirectX::XMMatrixAffineTransformation(DirectX::XMVectorSet(1, 1, 1, 1), 
 		m_Joints[0], rotations[SMPL_SKELETON_POSITION_HIP_CENTER], DirectX::XMVectorSet(0, 0, 0, 1));
 
 	// Update children transformations
-	for (int i = SMPL_SKELETON_POSITION_HIP_RIGHT; i < SMPL_SKELETON_POSITION_COUNT; i++)
+	for (int i = 1; i < SMPL_SKELETON_POSITION_COUNT; i++)
 	{
 		// Here can be some low pass filtering
 		transform[i] = transform[SMPL_PARENT_INDEX[i]]
@@ -57,5 +58,17 @@ void SimpleHierarchy::Update(const SimpleRotations& rotations)
 	{
 		// Transpose, because HLSL expects matrices in the column major form
 		DirectX::XMStoreFloat4x4(&m_Transform[i], DirectX::XMMatrixTranspose(transform[i]));
+	}
+
+	if (traceable)
+	{
+		util::TempFile file("Skinning");
+		for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
+		{
+			file << m_Transform[i]._11 << " " << m_Transform[i]._12 << " " << m_Transform[i]._13 << " " << m_Transform[i]._14 << L"\n";
+			file << m_Transform[i]._21 << " " << m_Transform[i]._22 << " " << m_Transform[i]._23 << " " << m_Transform[i]._24 << "\n";
+			file << m_Transform[i]._31 << " " << m_Transform[i]._32 << " " << m_Transform[i]._33 << " " << m_Transform[i]._34 << "\n";
+			file << m_Transform[i]._41 << " " << m_Transform[i]._42 << " " << m_Transform[i]._43 << " " << m_Transform[i]._44 << "\n";
+		}
 	}
 }

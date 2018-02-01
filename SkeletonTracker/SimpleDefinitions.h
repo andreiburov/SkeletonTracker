@@ -54,24 +54,26 @@ const _SMPL_SKELETON_POSITION_INDEX SMPL_INDEX_FROM_KINECT_INDEX[NUI_SKELETON_PO
 };
 
 struct SimpleRotations {
-	DirectX::XMVECTOR rotation[SMPL_SKELETON_POSITION_COUNT];
+	DirectX::XMVECTOR rotations[SMPL_SKELETON_POSITION_COUNT];
 
 	SimpleRotations()
 	{
-		ZeroMemory(rotation, sizeof(rotation));
+		ZeroMemory(rotations, sizeof(rotations));
 		for (unsigned short i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
 		{
-			rotation[i] = DirectX::XMQuaternionIdentity();
+			rotations[i] = DirectX::XMQuaternionIdentity();
 		}
 	}
 
 	DirectX::XMVECTOR operator[](_SMPL_SKELETON_POSITION_INDEX i) const
 	{
-		return rotation[i];
+		return rotations[i];
 	}
 
 	DirectX::XMVECTOR& operator[](_SMPL_SKELETON_POSITION_INDEX i)
 	{
-		return rotation[i];
+		return rotations[i];
 	}
+
+	void printThetas() const;
 };

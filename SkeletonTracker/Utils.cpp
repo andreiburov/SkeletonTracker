@@ -66,7 +66,7 @@ namespace util {
 		return v;
 	}
 
-	DirectX::XMVECTOR AxisAngleFromQuaternion(DirectX::XMVECTOR quaternion)
+	DirectX::XMVECTOR AxisAngleFromQuaternion(const DirectX::XMVECTOR quaternion)
 	{
 		DirectX::XMFLOAT3 output;
 		DirectX::XMVECTOR axis;
@@ -74,7 +74,8 @@ namespace util {
 
 		DirectX::XMQuaternionToAxisAngle(&axis, &angle, quaternion);
 		axis = DirectX::XMVector3Normalize(axis);
-		if (angle < 0) angle += DirectX::XM_2PI;
+		while (angle < 0) angle += DirectX::XM_2PI;
+		while (angle > DirectX::XM_2PI) angle -= DirectX::XM_2PI;
 		return DirectX::XMVectorScale(axis, angle);
 	}
 

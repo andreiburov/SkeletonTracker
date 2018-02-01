@@ -193,7 +193,9 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext, const SimpleRot
 
 	pd3dDeviceContext->UpdateSubresource(m_pWVPMatricesConstantBuffer, 0, nullptr, &m_WVPMatricesConstantBufferData, 0, 0);
 
-	m_Hierarchy.Update(rotations);
+	if (!online) rotations.printThetas();
+
+	m_Hierarchy.Update(rotations, !online);
 	pd3dDeviceContext->UpdateSubresource(m_pHierarchyConstantBuffer, 0, nullptr, m_Hierarchy.getHierarchyConstantBuffer(), 0, 0);
 	
 	m_Pose.Update(rotations, !online);

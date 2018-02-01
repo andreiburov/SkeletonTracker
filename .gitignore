@@ -6,6 +6,8 @@
 # Project specifics
 Rotations/
 Joints/
+Skinning/
+Thetas/
 
 # Compiled Shader Object
 *.cso
