@@ -13,6 +13,11 @@ cbuffer thetaConstantBuffer : register(b1)
 	float theta[SMPL_POSEDIRS_COUNT];
 };
 
+cbuffer vsParametersConstantBuffer : register(b2)
+{
+	bool lbsOnly;
+}
+
 Buffer<float3> posedirs : register(t0);
 
 struct VertexShaderInput
@@ -60,7 +65,10 @@ LBSOutput LinearBlendSkinning(VertexShaderInput input)
 GeometryShaderInput main(VertexShaderInput input, uint id : SV_VertexID)
 {
 	GeometryShaderInput output = (GeometryShaderInput)0;
-	input.pos += SMPLPoseCorrection(id);
+	if (!lbsOnly)
+	{
+		input.pos += SMPLPoseCorrection(id);
+	}
 	LBSOutput lbs = LinearBlendSkinning(input);
 	output.pos = float4(lbs.pos, 1.f);
 

@@ -244,6 +244,12 @@ LRESULT CALLBACK Application::DlgProc(HWND hWnd, UINT message, WPARAM wParam, LP
 			}
 		}
 
+		// Toggle LBS only
+		if (IDC_LBS_ONLY == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+		{
+			m_SimpleModel.ToggleLBSonly();
+		}
+
 		// Print the joints to the local timestamped file
 		if (IDC_PRINT_JOINTS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{

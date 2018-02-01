@@ -16,5 +16,5 @@ private:
 
 	DirectX::XMFLOAT3 m_thetas[SMPL_SKELETON_POSITION_COUNT - 1];
 	DirectX::XMFLOAT3X3 m_R[SMPL_SKELETON_POSITION_COUNT - 1];
-	char padding[(16 - (sizeof(float)*9*(SMPL_SKELETON_POSITION_COUNT - 1)) % 16)];
+	byte padding[(16 - (sizeof(float)*9*(SMPL_SKELETON_POSITION_COUNT - 1)) % 16)];
 };

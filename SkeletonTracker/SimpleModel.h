@@ -17,10 +17,20 @@ public:
 			: pos{ posx,posy,posz }, nor{ 0.f,0.f,0.f } {}
 	};
 
-	struct VertexConstantBuffer {
+	struct WVPMatricesConstantBuffer {
 		DirectX::XMFLOAT4X4 worldView;
 		DirectX::XMFLOAT4X4 projection;
 		DirectX::XMFLOAT4X4 worldViewIT;
+	};
+
+	struct VSParametersConstantBuffer {
+		bool lbsOnly;
+		byte padding[15];
+
+		VSParametersConstantBuffer() : lbsOnly(false)
+		{
+			ZeroMemory(&padding, sizeof(padding));
+		}
 	};
 
 	SimpleModel() {}
@@ -31,6 +41,7 @@ public:
 		const std::wstring& geometryShaderFilename,	const std::wstring& pixelShaderFilename, float aspectRatio);
 
 	void Render(ID3D11DeviceContext*, const SimpleRotations& rotations, bool online);
+	void ToggleLBSonly() { m_VSParametersConstantBufferData.lbsOnly = !m_VSParametersConstantBufferData.lbsOnly; }
 
 	void Clear();
 
@@ -43,10 +54,13 @@ private:
 	ID3D11Buffer* m_pVertexBuffer = nullptr;
 	ID3D11Buffer* m_pIndexBuffer = nullptr;
 	unsigned int m_IndicesCount = 0;
+
+	ID3D11Buffer* m_pVSParametersConstantBuffer = nullptr;
+	VSParametersConstantBuffer m_VSParametersConstantBufferData;
 	
 	// World/View/Perspective Matrices
-	ID3D11Buffer* m_pVertexMatricesConstantBuffer = nullptr; 
-	VertexConstantBuffer m_VertexConstantBufferData;
+	ID3D11Buffer* m_pWVPMatricesConstantBuffer = nullptr; 
+	WVPMatricesConstantBuffer m_WVPMatricesConstantBufferData;
 	DirectX::XMMATRIX m_View;
 
 	// Hierarchy for Linear Blend Skinning

@@ -76,18 +76,32 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilen
 	VALIDATE(pd3dDevice->CreateBuffer(&indexBufferDesc, &indexBufferData, &m_pIndexBuffer),
 		L"Could not create IndexBuffer");
 
-	// Create vertex ConstantBuffer for world view perspective matrices
+	// Create vertex ConstantBuffer for VertexShader parameters
 	{
 		D3D11_BUFFER_DESC constantBufferDesc = { 0 };
-		constantBufferDesc.ByteWidth = sizeof(m_VertexConstantBufferData);
+		constantBufferDesc.ByteWidth = sizeof(m_VSParametersConstantBufferData);
 		constantBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 		constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		constantBufferDesc.CPUAccessFlags = 0;
 		constantBufferDesc.MiscFlags = 0;
 		constantBufferDesc.StructureByteStride = 0;
 
-		VALIDATE(pd3dDevice->CreateBuffer(&constantBufferDesc, nullptr, &m_pVertexMatricesConstantBuffer),
-			L"Could not create VertexConstantBuffer");
+		VALIDATE(pd3dDevice->CreateBuffer(&constantBufferDesc, nullptr, &m_pVSParametersConstantBuffer),
+			L"Could not create VSParametersConstantBuffer");
+	}
+
+	// Create vertex ConstantBuffer for world view perspective matrices
+	{
+		D3D11_BUFFER_DESC constantBufferDesc = { 0 };
+		constantBufferDesc.ByteWidth = sizeof(m_WVPMatricesConstantBufferData);
+		constantBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+		constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		constantBufferDesc.CPUAccessFlags = 0;
+		constantBufferDesc.MiscFlags = 0;
+		constantBufferDesc.StructureByteStride = 0;
+
+		VALIDATE(pd3dDevice->CreateBuffer(&constantBufferDesc, nullptr, &m_pWVPMatricesConstantBuffer),
+			L"Could not create WVPMatricesConstantBuffer");
 	}
 
 	DirectX::XMFLOAT4 eye(0, 1, -2, 1);
@@ -97,7 +111,7 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilen
 		DirectX::XMLoadFloat4(&focus),
 		DirectX::XMLoadFloat4(&up));
 
-	DirectX::XMStoreFloat4x4(&m_VertexConstantBufferData.projection,
+	DirectX::XMStoreFloat4x4(&m_WVPMatricesConstantBufferData.projection,
 		DirectX::XMMatrixTranspose(DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PIDIV2, aspectRatio, 0.001f, 10.0f)));
 
 	// Create hierarchy ConstantBuffer for linear blend skinning
@@ -170,20 +184,22 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext, const SimpleRot
 	// Update the constant buffer to rotate the cube model
 	DirectX::XMMATRIX transform = 
 		DirectX::XMMatrixMultiply(DirectX::XMMatrixRotationY(degree), m_View);
-	DirectX::XMStoreFloat4x4(&m_VertexConstantBufferData.worldView, DirectX::XMMatrixTranspose(transform));
-	DirectX::XMStoreFloat4x4(&m_VertexConstantBufferData.worldViewIT, 
+	DirectX::XMStoreFloat4x4(&m_WVPMatricesConstantBufferData.worldView, DirectX::XMMatrixTranspose(transform));
+	DirectX::XMStoreFloat4x4(&m_WVPMatricesConstantBufferData.worldViewIT, 
 		DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(nullptr, DirectX::XMMatrixTranspose(transform))));
 
 	//degree += 0.01f;
 	//elapsed += 0.01f;
 
-	pd3dDeviceContext->UpdateSubresource(m_pVertexMatricesConstantBuffer, 0, nullptr, &m_VertexConstantBufferData, 0, 0);
+	pd3dDeviceContext->UpdateSubresource(m_pWVPMatricesConstantBuffer, 0, nullptr, &m_WVPMatricesConstantBufferData, 0, 0);
 
 	m_Hierarchy.Update(rotations);
 	pd3dDeviceContext->UpdateSubresource(m_pHierarchyConstantBuffer, 0, nullptr, m_Hierarchy.getHierarchyConstantBuffer(), 0, 0);
 	
 	m_Pose.Update(rotations, !online);
 	pd3dDeviceContext->UpdateSubresource(m_pPoseConstantBuffer, 0, nullptr, m_Pose.getPoseConstantBuffer(), 0, 0);
+
+	pd3dDeviceContext->UpdateSubresource(m_pVSParametersConstantBuffer, 0, nullptr, &m_VSParametersConstantBufferData, 0, 0);
 
 	pd3dDeviceContext->IASetInputLayout(m_pInputLayout);
 
@@ -198,10 +214,11 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext, const SimpleRot
 	pd3dDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
 	pd3dDeviceContext->VSSetConstantBuffers(0, 1, &m_pHierarchyConstantBuffer);
 	pd3dDeviceContext->VSSetConstantBuffers(1, 1, &m_pPoseConstantBuffer);
+	pd3dDeviceContext->VSSetConstantBuffers(2, 1, &m_pVSParametersConstantBuffer);
 	pd3dDeviceContext->VSSetShaderResources(0, 1, &m_pPosedirsSRV);
 
 	pd3dDeviceContext->GSSetShader(m_pGeometryShader, nullptr, 0);
-	pd3dDeviceContext->GSSetConstantBuffers(0, 1, &m_pVertexMatricesConstantBuffer);
+	pd3dDeviceContext->GSSetConstantBuffers(0, 1, &m_pWVPMatricesConstantBuffer);
 
 	pd3dDeviceContext->PSSetShader(m_pPixelShader, nullptr,	0);
 
@@ -216,7 +233,7 @@ void SimpleModel::Clear()
 	SAFE_RELEASE(m_pPixelShader);
 	SAFE_RELEASE(m_pVertexBuffer);
 	SAFE_RELEASE(m_pIndexBuffer);
-	SAFE_RELEASE(m_pVertexMatricesConstantBuffer);
+	SAFE_RELEASE(m_pWVPMatricesConstantBuffer);
 	SAFE_RELEASE(m_pHierarchyConstantBuffer);
 	SAFE_RELEASE(m_pPosedirsSRV);
 }
