@@ -72,22 +72,22 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(KINECTSDK10_DIR)\inc;$(WindowsSDK_IncludePath);$(VC_IncludePath);../Eigen</IncludePath>
+    <IncludePath>$(KINECTSDK10_DIR)\inc;$(WindowsSDK_IncludePath);$(VC_IncludePath);..</IncludePath>
     <LibraryPath>$(KINECTSDK10_DIR)\lib\x86;$(WindowsSdkDir)lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(KINECTSDK10_DIR)\inc;$(WindowsSDK_IncludePath);$(VC_IncludePath);../Eigen</IncludePath>
+    <IncludePath>$(KINECTSDK10_DIR)\inc;$(WindowsSDK_IncludePath);$(VC_IncludePath);..</IncludePath>
     <LibraryPath>$(LibraryPath);$(KINECTSDK10_DIR)\lib\amd64;</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(KINECTSDK10_DIR)\inc;$(WindowsSDK_IncludePath);$(VC_IncludePath);../Eigen</IncludePath>
+    <IncludePath>$(KINECTSDK10_DIR)\inc;$(WindowsSDK_IncludePath);$(VC_IncludePath);..</IncludePath>
     <LibraryPath>$(KINECTSDK10_DIR)\lib\x86;$(WindowsSdkDir)lib;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(KINECTSDK10_DIR)\lib\x86</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(KINECTSDK10_DIR)\inc;$(WindowsSDK_IncludePath);$(VC_IncludePath);../Eigen</IncludePath>
+    <IncludePath>$(KINECTSDK10_DIR)\inc;$(WindowsSDK_IncludePath);$(VC_IncludePath);..</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(KINECTSDK10_DIR)\lib\amd64;</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

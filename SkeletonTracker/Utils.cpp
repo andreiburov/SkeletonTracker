@@ -30,6 +30,53 @@ namespace util {
 		return DirectX::XMVectorSet(-v.x, -v.y, -v.z, v.w);
 	}
 
+	Eigen::Quaterniond QUATERNION(float x, float y, float z, float w)
+	{
+		Eigen::Quaterniond q(w, x, y, z);
+		return q;
+	}
+
+	DirectX::XMFLOAT4X4 MATRIX(Eigen::Matrix4d in)
+	{
+		DirectX::XMFLOAT4X4 out;
+		out._11 = in(0, 0);
+		out._12 = in(0, 1);
+		out._13 = in(0, 2);
+		out._14 = in(0, 3);
+		//
+		out._21 = in(1, 0);
+		out._22 = in(1, 1);
+		out._23 = in(1, 2);
+		out._24 = in(1, 3);
+		//
+		out._31 = in(2, 0);
+		out._32 = in(2, 1);
+		out._33 = in(2, 2);
+		out._34 = in(2, 3);
+		//
+		out._41 = in(3, 0);
+		out._42 = in(3, 1);
+		out._43 = in(3, 2);
+		out._44 = in(3, 3);
+		return out;
+	}
+
+	Eigen::Matrix4d RotateAroundPoint(DirectX::XMVECTOR quaternion, DirectX::XMVECTOR point)
+	{
+		Eigen::Matrix4d rotation = Eigen::Matrix4d::Identity();
+		Eigen::Matrix4d translation = Eigen::Matrix4d::Identity();
+		Eigen::Matrix4d iTranslation = Eigen::Matrix4d::Identity();
+		
+		translation.rightCols<1>() = Eigen::Vector4d(DirectX::XMVectorGetX(point),
+			DirectX::XMVectorGetY(point), DirectX::XMVectorGetZ(point), DirectX::XMVectorGetW(point));
+		iTranslation.rightCols<1>() = Eigen::Vector4d(-DirectX::XMVectorGetX(point),
+			-DirectX::XMVectorGetY(point), -DirectX::XMVectorGetZ(point), DirectX::XMVectorGetW(point));
+		rotation.block<3, 3>(0, 0) = QUATERNION(DirectX::XMVectorGetX(quaternion), DirectX::XMVectorGetY(quaternion),
+			DirectX::XMVectorGetZ(quaternion), DirectX::XMVectorGetW(quaternion)).normalized().toRotationMatrix();
+		
+		return iTranslation * rotation * translation;
+	}
+
 	float Length(Vector4 v)
 	{
 		return sqrt(v.x*v.x + v.y*v.y + v.z*v.z);

@@ -10,7 +10,10 @@ public:
 
 	unsigned int getByteWidth() { return sizeof(m_Transform);	}
 	void* getHierarchyConstantBuffer() { return &m_Transform; }
-	void Update(const SimpleRotations& rotations, bool traceable);
+	void UpdateWithDirectXSmplStyle(const SimpleRotations& rotations, bool traceable);
+	void UpdateWithEigenSmplStyle(const SimpleRotations& rotations, bool traceable);
+	void UpdateWithDirectX(const SimpleRotations& rotations, bool traceable);
+	void UpdateWithEigen(const SimpleRotations& rotations, bool traceable);
 
 private:
 

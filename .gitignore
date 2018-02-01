@@ -7,7 +7,9 @@
 Rotations/
 Joints/
 Skinning/
+Skinning1/
 Thetas/
+Eigen/
 
 # Compiled Shader Object
 *.cso

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <stdio.h>
+#include <Eigen/Core>
+#include <Eigen/Geometry>
 
 #define SAFE_RELEASE(p) do { if (p) { (p)->Release(); (p) = nullptr; } } while(0)
 #define VALIDATE(x, wstr) \
@@ -16,6 +18,11 @@ namespace util {
 	Vector4 VECTOR4(float x, float y, float z);
 	Vector4 VECTOR4(DirectX::XMVECTOR v);
 	DirectX::XMVECTOR QUATERNION(Vector4 v);
+	Eigen::Quaterniond QUATERNION(float x, float y, float z, float w);
+	DirectX::XMFLOAT4X4 MATRIX(Eigen::Matrix4d);
+
+	Eigen::Matrix4d RotateAroundPoint(DirectX::XMVECTOR quaternion, DirectX::XMVECTOR point);
+	
 	float Length(Vector4 v);
 	Vector4 Normalize(Vector4 v);
 
