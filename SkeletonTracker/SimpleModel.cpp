@@ -160,7 +160,7 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilen
 	delete[] posedirs;
 }
 
-void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext, const SimpleRotations& rotations)
+void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext, const SimpleRotations& rotations, bool online)
 {
 	static float degree = DirectX::XM_PI;
 	static float elapsed = 0.f;
@@ -182,7 +182,7 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext, const SimpleRot
 	m_Hierarchy.Update(rotations);
 	pd3dDeviceContext->UpdateSubresource(m_pHierarchyConstantBuffer, 0, nullptr, m_Hierarchy.getHierarchyConstantBuffer(), 0, 0);
 	
-	m_Pose.Update(rotations);
+	m_Pose.Update(rotations, !online);
 	pd3dDeviceContext->UpdateSubresource(m_pPoseConstantBuffer, 0, nullptr, m_Pose.getPoseConstantBuffer(), 0, 0);
 
 	pd3dDeviceContext->IASetInputLayout(m_pInputLayout);

@@ -22,9 +22,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 }
 
 Application::Application() :
+	m_bOnline(false),
 	m_pD2DFactory(NULL),
 	m_hNextSkeletonEvent(INVALID_HANDLE_VALUE),
-	m_bSeatedMode(false),
 	m_pRenderTarget(NULL),
 	m_pBrushJointTracked(NULL),
 	m_pBrushJointInferred(NULL),
@@ -106,9 +106,11 @@ int Application::Run(HINSTANCE hInstance, int nCmdShow)
 
 		// Explicitly check the Kinect frame event since MsgWaitForMultipleObjects
 		// can return for other reasons even though it is signaled.
-		SimpleRotations rotations;
-		CheckKinectData(rotations);
-		RenderSimpleModel(rotations);
+		CheckKinectData(m_Rotations);
+		if (m_bOnline)
+		{
+			RenderSimpleModel(m_Rotations);
+		}
 
 		if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
 		{
@@ -225,26 +227,30 @@ LRESULT CALLBACK Application::DlgProc(HWND hWnd, UINT message, WPARAM wParam, LP
 
 		// Handle button press
 	case WM_COMMAND:
-		// If it was for the near mode control and a clicked event, change near mode
-		if (IDC_CHECK_SEATED == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
-		{
-			// Toggle out internal state for near mode
-			m_bSeatedMode = !m_bSeatedMode;
 
-			if (NULL != m_pNuiSensor)
+		// Toggle traceable rotations to online
+		if (IDC_ONLINE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+		{
+			// Toggle out
+			m_bOnline = !m_bOnline;
+		}
+
+		// If online is false (i.e. traceable) apply rotations to the SimpleModel
+		if (IDC_APPLY_ROTATIONS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+		{
+			if (!m_bOnline)
 			{
-				// Set near mode for sensor based on our internal state
-				m_pNuiSensor->NuiSkeletonTrackingEnable(m_hNextSkeletonEvent, m_bSeatedMode ? NUI_SKELETON_TRACKING_FLAG_ENABLE_SEATED_SUPPORT : 0);
+				RenderSimpleModel(m_Rotations);
 			}
 		}
 
-		// If the button was pressed print the joints to the local timestamped file
+		// Print the joints to the local timestamped file
 		if (IDC_PRINT_JOINTS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
 			m_KinectSkeleton.PrintJoints();
 		}
 
-		// If the button was pressed, get the transform and apply it to SimpleSkeleton
+		// Get the transform and apply it to SimpleSkeleton (blue skeleton)
 		if (IDC_APPLY_TRANSFORM == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
 			Vector4 scale;
@@ -272,13 +278,13 @@ LRESULT CALLBACK Application::DlgProc(HWND hWnd, UINT message, WPARAM wParam, LP
 			m_SimpleSkeleton.ApplyTransformations(scale, translate);
 		}
 
-		// If the button was pressed, convert hierarchical quaternions to axis-angle vectors
+		// Convert hierarchical quaternions to axis-angle vectors and print to timestamped file
 		if (IDC_PRINT_ROTATIONS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
 			m_KinectSkeleton.PrintSimplePose();
 		}
 
-		// If the button was pressed, keep kinect orientations for the T pose
+		// Store kinect hierarchical orientations for the T pose
 		if (IDC_FIX_MAPPING == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
 			m_KinectSkeleton.FixTpose();
@@ -623,7 +629,7 @@ void Application::RenderSimpleModel(const SimpleRotations& rotations)
 	m_pImmediateContext->ClearRenderTargetView(m_pRenderTargetView, DirectX::Colors::MidnightBlue);
 	m_pImmediateContext->ClearDepthStencilView(m_pDepthStencilView,	D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-	m_SimpleModel.Render(m_pImmediateContext, rotations);
+	m_SimpleModel.Render(m_pImmediateContext, rotations, m_bOnline);
 
 	m_pSwapChain->Present(1, 0);
 }

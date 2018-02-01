@@ -30,7 +30,7 @@ public:
 		const std::string& posedirsFilename, const std::wstring& vertexShaderFileName,
 		const std::wstring& geometryShaderFilename,	const std::wstring& pixelShaderFilename, float aspectRatio);
 
-	void Render(ID3D11DeviceContext*, const SimpleRotations& rotations);
+	void Render(ID3D11DeviceContext*, const SimpleRotations& rotations, bool online);
 
 	void Clear();
 

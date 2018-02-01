@@ -42,9 +42,9 @@ public:
 	int Run(HINSTANCE hInstance, int nCmdShow);
 
 private:
+	// Windows Interface
 	HWND                     m_hWnd;
-
-	bool                     m_bSeatedMode;
+	bool					 m_bOnline;
 
 	// Current Kinect
 	INuiSensor*              m_pNuiSensor;
@@ -76,6 +76,7 @@ private:
 
 	KinectSkeleton			 m_KinectSkeleton;
 	SimpleSkeleton			 m_SimpleSkeleton;
+	SimpleRotations			 m_Rotations;
 	SimpleModel				 m_SimpleModel;
 	float					 m_aspectRatio; // Aspect ratio of view-space X:Y
 
