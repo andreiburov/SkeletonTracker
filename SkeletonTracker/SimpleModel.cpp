@@ -35,7 +35,7 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilen
 	VALIDATE(pd3dDevice->CreatePixelShader(pixelShader.data(), pixelShader.size(),
 		nullptr, &m_pPixelShader), L"Could not create PixelShader");
 
-	std::vector<SimpleVertex> vertices;
+	std::vector<SimpleModelVertex> vertices;
 	std::vector<unsigned short> indices;
 	float* posedirs = new float[SMPL_POSEDIRS_ELEMENTS_COUNT];
 
@@ -43,7 +43,7 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilen
 	//computeFaceNormals(vertices, indices);
 
 	D3D11_BUFFER_DESC vertexBufferDesc = { 0 };
-	vertexBufferDesc.ByteWidth = sizeof(SimpleVertex) * (unsigned int)vertices.size();
+	vertexBufferDesc.ByteWidth = sizeof(SimpleModelVertex) * (unsigned int)vertices.size();
 	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vertexBufferDesc.CPUAccessFlags = 0;
@@ -206,7 +206,7 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext, const SimpleRot
 	pd3dDeviceContext->IASetInputLayout(m_pInputLayout);
 
 	// Set the vertex and index buffers, and specify the way they define geometry
-	UINT stride = sizeof(SimpleVertex);
+	UINT stride = sizeof(SimpleModelVertex);
 	UINT offset = 0;
 	pd3dDeviceContext->IASetVertexBuffers(0, 1,	&m_pVertexBuffer, &stride, &offset);
 	pd3dDeviceContext->IASetIndexBuffer(m_pIndexBuffer,	DXGI_FORMAT_R16_UINT, 0);
@@ -224,24 +224,26 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext, const SimpleRot
 
 	pd3dDeviceContext->PSSetShader(m_pPixelShader, nullptr,	0);
 
-	// Draw the cube
 	pd3dDeviceContext->DrawIndexed(m_IndicesCount, 0, 0);
 }
 
 void SimpleModel::Clear()
 {
-	SAFE_RELEASE(m_pInputLayout);
 	SAFE_RELEASE(m_pVertexShader);
 	SAFE_RELEASE(m_pPixelShader);
+	SAFE_RELEASE(m_pGeometryShader);
+	SAFE_RELEASE(m_pInputLayout);
 	SAFE_RELEASE(m_pVertexBuffer);
 	SAFE_RELEASE(m_pIndexBuffer);
+	SAFE_RELEASE(m_pVSParametersConstantBuffer);
 	SAFE_RELEASE(m_pWVPMatricesConstantBuffer);
 	SAFE_RELEASE(m_pLBSConstantBuffer);
+	SAFE_RELEASE(m_pPoseConstantBuffer);
 	SAFE_RELEASE(m_pPosedirsSRV);
 }
 
 void SimpleModel::readObjFile(const std::string& modelFilename,
-	const std::string& posedirsFilename, std::vector<SimpleVertex>& vertices,
+	const std::string& posedirsFilename, std::vector<SimpleModelVertex>& vertices,
 	std::vector<unsigned short>& indices, float*& posedirs)
 {
 	std::ifstream modelFile(modelFilename, std::ios::in);
@@ -263,7 +265,7 @@ void SimpleModel::readObjFile(const std::string& modelFilename,
 		{
 			float x, y, z;
 			modelFile >> x >> y >> z;
-			vertices.push_back(SimpleVertex(x, y, z));
+			vertices.push_back(SimpleModelVertex(x, y, z));
 		}
 		else if (type.compare("f") == 0)
 		{
@@ -300,7 +302,7 @@ void SimpleModel::readObjFile(const std::string& modelFilename,
 	fclose(posedirsFile);
 }
 
-void SimpleModel::computeFaceNormals(std::vector<SimpleVertex>& vertices, const std::vector<unsigned short>& indices)
+void SimpleModel::computeFaceNormals(std::vector<SimpleModelVertex>& vertices, const std::vector<unsigned short>& indices)
 {
 	unsigned short n_count[VERTEX_COUNT];
 	DirectX::XMFLOAT3 normals[VERTEX_COUNT][MAX_TRIANGLES_PER_VERTEX];

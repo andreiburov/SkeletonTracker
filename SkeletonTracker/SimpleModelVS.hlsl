@@ -1,9 +1,9 @@
-#include "Common.hlsli"
+#include "SimpleModel.hlsli"
 
 #define SMPL_SKELETON_POSITION_COUNT 24
 #define SMPL_POSEDIRS_COUNT 207
 
-cbuffer hierarchyConstantBuffer : register(b0)
+cbuffer lbsConstantBuffer : register(b0)
 {
 	matrix transform[SMPL_SKELETON_POSITION_COUNT];
 };

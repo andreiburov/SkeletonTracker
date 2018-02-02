@@ -1,4 +1,4 @@
-#include "Common.hlsli"
+#include "SimpleModel.hlsli"
 
 float4 main(PixelShaderInput input) : SV_TARGET
 {

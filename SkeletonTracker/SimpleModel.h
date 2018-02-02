@@ -6,14 +6,29 @@
 class SimpleModel
 {
 public:
-	struct SimpleVertex
+
+	SimpleModel() {}
+	~SimpleModel() { Clear(); }
+
+	void Create(ID3D11Device* pd3dDevice, const std::string& modelFilename,
+		const std::string& posedirsFilename, const std::wstring& vertexShaderFileName,
+		const std::wstring& geometryShaderFilename,	const std::wstring& pixelShaderFilename, float aspectRatio);
+
+	void Render(ID3D11DeviceContext*, const SimpleRotations& rotations, bool online);
+	void ToggleLBSonly() { m_VSParametersConstantBufferData.lbsOnly = !m_VSParametersConstantBufferData.lbsOnly; }
+
+	void Clear();
+
+private:
+
+	struct SimpleModelVertex
 	{
 		float weight[4];
 		int joint_idx[4];
 		float pos[3];
 		float nor[3];
 
-		SimpleVertex(float posx, float posy, float posz)
+		SimpleModelVertex(float posx, float posy, float posz)
 			: pos{ posx,posy,posz }, nor{ 0.f,0.f,0.f } {}
 	};
 
@@ -33,24 +48,11 @@ public:
 		}
 	};
 
-	SimpleModel() {}
-	~SimpleModel() { Clear(); }
-
-	void Create(ID3D11Device* pd3dDevice, const std::string& modelFilename,
-		const std::string& posedirsFilename, const std::wstring& vertexShaderFileName,
-		const std::wstring& geometryShaderFilename,	const std::wstring& pixelShaderFilename, float aspectRatio);
-
-	void Render(ID3D11DeviceContext*, const SimpleRotations& rotations, bool online);
-	void ToggleLBSonly() { m_VSParametersConstantBufferData.lbsOnly = !m_VSParametersConstantBufferData.lbsOnly; }
-
-	void Clear();
-
-private:
-	ID3D11InputLayout * m_pInputLayout = nullptr;
 	ID3D11VertexShader* m_pVertexShader = nullptr;
 	ID3D11GeometryShader* m_pGeometryShader = nullptr;
 	ID3D11PixelShader* m_pPixelShader = nullptr;
 
+	ID3D11InputLayout * m_pInputLayout = nullptr;
 	ID3D11Buffer* m_pVertexBuffer = nullptr;
 	ID3D11Buffer* m_pIndexBuffer = nullptr;
 	unsigned int m_IndicesCount = 0;
@@ -63,7 +65,7 @@ private:
 	WVPMatricesConstantBuffer m_WVPMatricesConstantBufferData;
 	DirectX::XMMATRIX m_View;
 
-	// Linear Blend Skinning
+	// Linear Blend Skinning Matrices
 	ID3D11Buffer* m_pLBSConstantBuffer = nullptr;
 	SimpleLBS m_LBS;
 
@@ -75,8 +77,8 @@ private:
 	ID3D11ShaderResourceView*  m_pPosedirsSRV = nullptr;
 
 	void readObjFile(const std::string& modelFilename, const std::string& posedirsFilename,
-		std::vector<SimpleVertex>& vertices, std::vector<unsigned short>& indices,
+		std::vector<SimpleModelVertex>& vertices, std::vector<unsigned short>& indices,
 		float*& posedirs);
 
-	void computeFaceNormals(std::vector<SimpleVertex>& vertices, const std::vector<unsigned short>& indices);
+	void computeFaceNormals(std::vector<SimpleModelVertex>& vertices, const std::vector<unsigned short>& indices);
 };

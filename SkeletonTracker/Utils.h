@@ -27,7 +27,8 @@ namespace util {
 	Vector4 Normalize(Vector4 v);
 
 	Vector4 AxisAngleFromQuaternion(Vector4 q);
-	DirectX::XMVECTOR AxisAngleFromQuaternion(const DirectX::XMVECTOR quaternion);
+	DirectX::XMVECTOR AxisAngle3FromQuaternion(const DirectX::XMVECTOR quaternion);
+	DirectX::XMFLOAT4 AxisAngle4FromQuaternion(const DirectX::XMVECTOR quaternion);
 
 	std::vector<byte> readShaderFromCSO(const std::wstring& filename);
 

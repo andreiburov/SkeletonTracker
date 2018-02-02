@@ -34,7 +34,7 @@ void SimpleRotations::printThetas() const
 	for (int i = 0; i < N; i++)
 	{
 		XMFLOAT3 t;
-		XMVECTOR theta = util::AxisAngleFromQuaternion(rotations[(SMPL_SKELETON_POSITION_INDEX)i]);
+		XMVECTOR theta = util::AxisAngle3FromQuaternion(rotations[(SMPL_SKELETON_POSITION_INDEX)i]);
 
 		XMStoreFloat3(&t, theta);
 		file << t.x << ", " << t.y << ", " << t.z;

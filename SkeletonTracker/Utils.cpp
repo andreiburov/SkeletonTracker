@@ -114,7 +114,7 @@ namespace util {
 		return v;
 	}
 
-	DirectX::XMVECTOR AxisAngleFromQuaternion(const DirectX::XMVECTOR quaternion)
+	DirectX::XMVECTOR AxisAngle3FromQuaternion(const DirectX::XMVECTOR quaternion)
 	{
 		DirectX::XMFLOAT3 output;
 		DirectX::XMVECTOR axis;
@@ -125,6 +125,20 @@ namespace util {
 		while (angle < 0) angle += DirectX::XM_2PI;
 		while (angle > DirectX::XM_2PI) angle -= DirectX::XM_2PI;
 		return DirectX::XMVectorScale(axis, angle);
+	}
+
+	DirectX::XMFLOAT4 AxisAngle4FromQuaternion(const DirectX::XMVECTOR quaternion)
+	{
+		DirectX::XMFLOAT4 out;
+		DirectX::XMVECTOR axis;
+		float angle;
+
+		DirectX::XMQuaternionToAxisAngle(&axis, &angle, quaternion);
+		axis = DirectX::XMVector3Normalize(axis);
+		while (angle < 0) angle += DirectX::XM_2PI;
+		while (angle > DirectX::XM_2PI) angle -= DirectX::XM_2PI;
+		DirectX::XMStoreFloat4(&out, DirectX::XMVectorSetW(axis, angle));
+		return out;
 	}
 
 	std::wostream& operator<<(std::wostream& out, const Vec4& v)

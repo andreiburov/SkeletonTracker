@@ -23,6 +23,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 Application::Application() :
 	m_bOnline(false),
+	m_bRenderSkeleton3D(false),
 	m_pD2DFactory(NULL),
 	m_hNextSkeletonEvent(INVALID_HANDLE_VALUE),
 	m_pRenderTarget(NULL),
@@ -31,7 +32,7 @@ Application::Application() :
 	m_pBrushBoneTracked(NULL),
 	m_pBrushBoneInferred(NULL),
 	m_pNuiSensor(NULL),
-	m_SimpleSkeleton(),
+	m_SimpleSkeleton2D(),
 	m_KinectSkeleton()
 {
 }
@@ -106,10 +107,17 @@ int Application::Run(HINSTANCE hInstance, int nCmdShow)
 
 		// Explicitly check the Kinect frame event since MsgWaitForMultipleObjects
 		// can return for other reasons even though it is signaled.
-		CheckKinectData(m_Rotations);
-		if (m_bOnline)
+		// m_KinectRotations is updated when T-Pose is calibrated
+		CheckKinectData();
+		if (m_bOnline) PassRotationsFromKinectToSimple();
+		
+		if (!m_bRenderSkeleton3D)
 		{
-			RenderSimpleModel(m_Rotations);
+			RenderSimpleModel();
+		}
+		else 
+		{
+			RenderSimpleSkeleton3D();
 		}
 
 		if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
@@ -126,6 +134,7 @@ int Application::Run(HINSTANCE hInstance, int nCmdShow)
 	}
 
 	m_SimpleModel.Clear();
+	m_SimpleSkeleton3D.Clear();
 	CleanupDevice();
 
 	return static_cast<int>(msg.wParam);
@@ -134,7 +143,7 @@ int Application::Run(HINSTANCE hInstance, int nCmdShow)
 /// <summary>
 /// Main processing function
 /// </summary>
-void Application::CheckKinectData(SimpleRotations& rotations)
+void Application::CheckKinectData()
 {
 	if (NULL == m_pNuiSensor)
 	{
@@ -144,7 +153,7 @@ void Application::CheckKinectData(SimpleRotations& rotations)
 	// Wait for 0ms, just quickly test if it is time to process a skeleton
 	if (WAIT_OBJECT_0 == WaitForSingleObject(m_hNextSkeletonEvent, 0))
 	{
-		ProcessSkeleton(rotations);
+		ProcessSkeleton();
 	}
 }
 
@@ -210,8 +219,10 @@ LRESULT CALLBACK Application::DlgProc(HWND hWnd, UINT message, WPARAM wParam, LP
 
 		// Create Simple Model
 		m_SimpleModel.Create(m_pd3dDevice, "SimpleModel/smpl.obj", 
-			"SimpleModel/smpl.posedirs", L"VertexShader.cso", 
-			L"GeometryShader.cso", L"PixelShader.cso", m_aspectRatio);
+			"SimpleModel/smpl.posedirs", L"SimpleModelVS.cso", 
+			L"SimpleModelGS.cso", L"SimpleModelPS.cso", m_aspectRatio);
+		m_SimpleSkeleton3D.Create(m_pd3dDevice, L"SimpleSkeleton3DVS.cso",
+			L"SimpleSkeleton3DGS.cso", L"SimpleSkeleton3DPS.cso", m_aspectRatio);
 	}
 	break;
 
@@ -235,13 +246,17 @@ LRESULT CALLBACK Application::DlgProc(HWND hWnd, UINT message, WPARAM wParam, LP
 			m_bOnline = !m_bOnline;
 		}
 
+		// Toggle model rendering to skeleton
+		if (IDC_RENDER_SKELETON == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+		{
+			// Toggle out
+			m_bRenderSkeleton3D = !m_bRenderSkeleton3D;
+		}
+
 		// If online is false (i.e. traceable) apply rotations to the SimpleModel
 		if (IDC_APPLY_ROTATIONS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			if (!m_bOnline)
-			{
-				RenderSimpleModel(m_Rotations);
-			}
+			if (!m_bOnline) PassRotationsFromKinectToSimple();
 		}
 
 		// Toggle LBS only
@@ -281,7 +296,7 @@ LRESULT CALLBACK Application::DlgProc(HWND hWnd, UINT message, WPARAM wParam, LP
 				wiss >> translate.x >> translate.y >> translate.z;
 			}
 
-			m_SimpleSkeleton.ApplyTransformations(scale, translate);
+			m_SimpleSkeleton2D.ApplyTransformations(scale, translate);
 		}
 
 		// Convert hierarchical quaternions to axis-angle vectors and print to timestamped file
@@ -364,7 +379,7 @@ HRESULT Application::CreateFirstConnected()
 /// <summary>
 /// Handle new skeleton data
 /// </summary>
-void Application::ProcessSkeleton(SimpleRotations& rotations)
+void Application::ProcessSkeleton()
 {
 	RECT rct;
 	GetClientRect(GetDlgItem(m_hWnd, IDC_VIEW_ONE), &rct);
@@ -391,7 +406,7 @@ void Application::ProcessSkeleton(SimpleRotations& rotations)
 	m_pRenderTarget->BeginDraw();
 	m_pRenderTarget->Clear();
 
-	m_SimpleSkeleton.Render(m_pRenderTarget, m_pBrushJointSimple, m_pBrushBoneSimple, width, height);
+	m_SimpleSkeleton2D.Render(m_pRenderTarget, m_pBrushJointSimple, m_pBrushBoneSimple, width, height);
 
 	KinectSkeleton::RenderHelper helper;
 	helper.pRenderTarget = m_pRenderTarget;
@@ -416,7 +431,7 @@ void Application::ProcessSkeleton(SimpleRotations& rotations)
 
 	if (m_KinectSkeleton.isTposeCalibrated())
 	{
-		m_KinectSkeleton.GetSimplePose(rotations);
+		m_KinectSkeleton.GetSimplePose(m_KinectRotations);
 	}
 }
 
@@ -629,17 +644,35 @@ HRESULT Application::InitDevice()
 //--------------------------------------------------------------------------------------
 // Render the frame
 //--------------------------------------------------------------------------------------
-void Application::RenderSimpleModel(const SimpleRotations& rotations)
+void Application::RenderSimpleModel()
 {
 	// Just clear the backbuffer
 	m_pImmediateContext->ClearRenderTargetView(m_pRenderTargetView, DirectX::Colors::MidnightBlue);
 	m_pImmediateContext->ClearDepthStencilView(m_pDepthStencilView,	D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-	m_SimpleModel.Render(m_pImmediateContext, rotations, m_bOnline);
+	m_SimpleModel.Render(m_pImmediateContext, m_SimpleRotations, m_bOnline);
 
 	m_pSwapChain->Present(1, 0);
 }
 
+void Application::RenderSimpleSkeleton3D()
+{
+	// Just clear the backbuffer
+	m_pImmediateContext->ClearRenderTargetView(m_pRenderTargetView, DirectX::Colors::MidnightBlue);
+	m_pImmediateContext->ClearDepthStencilView(m_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+	m_SimpleSkeleton3D.Render(m_pImmediateContext, m_SimpleRotations, m_bOnline);
+
+	m_pSwapChain->Present(1, 0);
+}
+
+void Application::PassRotationsFromKinectToSimple()
+{
+	for (unsigned int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
+	{
+		m_SimpleRotations[(_SMPL_SKELETON_POSITION_INDEX)i] = m_KinectRotations[(_SMPL_SKELETON_POSITION_INDEX)i];
+	}
+}
 
 //--------------------------------------------------------------------------------------
 // Clean up the objects we've created

@@ -107,18 +107,30 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="VertexShader.hlsl">
+    <FxCompile Include="SimpleModelPS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
-    <FxCompile Include="PixelShader.hlsl">
+    <FxCompile Include="SimpleModelGS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
-    <FxCompile Include="GeometryShader.hlsl">
+    <FxCompile Include="SimpleModelVS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="SimpleSkeleton3DVS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="SimpleSkeleton3DGS.hlsl">
+      <Filter>Shader</Filter>
+    </FxCompile>
+    <FxCompile Include="SimpleSkeleton3DPS.hlsl">
       <Filter>Shader</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Common.hlsli">
+    <None Include="SimpleModel.hlsli">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="SimpleSkeleton3D.hlsli">
       <Filter>Shader</Filter>
     </None>
   </ItemGroup>

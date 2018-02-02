@@ -4,6 +4,7 @@
 #include "KinectSkeleton.h"
 #include "SimpleSkeleton2D.h"
 #include "SimpleModel.h"
+#include "SimpleSkeleton3D.h"
 
 class Application
 {
@@ -45,6 +46,7 @@ private:
 	// Windows Interface
 	HWND                     m_hWnd;
 	bool					 m_bOnline;
+	bool                     m_bRenderSkeleton3D;
 
 	// Current Kinect
 	INuiSensor*              m_pNuiSensor;
@@ -74,10 +76,12 @@ private:
 
 	HANDLE                   m_hNextSkeletonEvent;
 
+	SimpleRotations          m_KinectRotations;
 	KinectSkeleton           m_KinectSkeleton;
-	SimpleSkeleton2D         m_SimpleSkeleton;
-	SimpleRotations          m_Rotations;
+	SimpleSkeleton2D         m_SimpleSkeleton2D;
+	SimpleRotations          m_SimpleRotations;
 	SimpleModel              m_SimpleModel;
+	SimpleSkeleton3D         m_SimpleSkeleton3D;
 	float                    m_aspectRatio; // Aspect ratio of view-space X:Y
 
 	/// <summary>
@@ -86,17 +90,20 @@ private:
 	/// <returns>S_OK on success, otherwise failure code</returns>
 	HRESULT                 CreateFirstConnected();
 
-	void                    CheckKinectData(SimpleRotations& rotations);
+	void                    CheckKinectData();
 
 	/// <summary>
 	/// Handle new skeleton data
 	/// </summary>
-	void                    ProcessSkeleton(SimpleRotations& rotations);
+	void                    ProcessSkeleton();
+
+	void                    PassRotationsFromKinectToSimple();
 	
 	// Direct3D
 	HRESULT					InitDevice();
 	void					CleanupDevice();
-	void					RenderSimpleModel(const SimpleRotations& rotations);
+	void					RenderSimpleModel();
+	void                    RenderSimpleSkeleton3D();
 
 	/// <summary>
 	/// Ensure necessary Direct2d resources are created
