@@ -66,7 +66,7 @@ SimpleHierarchy::SimpleHierarchy()
 
 Eigen::Matrix4d skinPartOne(DirectX::XMVECTOR q, DirectX::XMVECTOR j)
 {
-	Eigen::Matrix4d t;
+	Eigen::Matrix4d t = Eigen::Matrix4d::Zero();
 	t.block<3, 3>(0, 0) = util::QUATERNION(
 		DirectX::XMVectorGetX(q),
 		DirectX::XMVectorGetY(q),
@@ -76,6 +76,16 @@ Eigen::Matrix4d skinPartOne(DirectX::XMVECTOR q, DirectX::XMVECTOR j)
 	t.rightCols<1>() = Eigen::Vector4d(DirectX::XMVectorGetX(j),
 		DirectX::XMVectorGetY(j), DirectX::XMVectorGetZ(j), 1.f);
 	return t;
+}
+
+Eigen::Matrix4d skinPartTwo(Eigen::Matrix4d r, DirectX::XMVECTOR j)
+{
+	Eigen::Vector4d ej(DirectX::XMVectorGetX(j),
+		DirectX::XMVectorGetY(j), DirectX::XMVectorGetZ(j), 0.f);
+	ej = r * ej;
+	Eigen::Matrix4d J = Eigen::Matrix4d::Zero();
+	J.rightCols<1>() = ej;
+	return r - J;
 }
 
 void SimpleHierarchy::UpdateWithEigenSmplStyle(const SimpleRotations& rotations, bool traceable)
@@ -98,45 +108,31 @@ void SimpleHierarchy::UpdateWithEigenSmplStyle(const SimpleRotations& rotations,
 		util::TempFile file("Skinning1");
 		for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
 		{
-			file << m_Transform[i]._11 << " " << m_Transform[i]._12 << " " << m_Transform[i]._13 << " " << m_Transform[i]._14 << L"\n";
-			file << m_Transform[i]._21 << " " << m_Transform[i]._22 << " " << m_Transform[i]._23 << " " << m_Transform[i]._24 << "\n";
-			file << m_Transform[i]._31 << " " << m_Transform[i]._32 << " " << m_Transform[i]._33 << " " << m_Transform[i]._34 << "\n";
-			file << m_Transform[i]._41 << " " << m_Transform[i]._42 << " " << m_Transform[i]._43 << " " << m_Transform[i]._44 << "\n";
+			file << transform[i](0, 0) << " " << transform[i](0, 1) << " " << transform[i](0, 2) << " " << transform[i](0, 3) << L"\n";
+			file << transform[i](1, 0) << " " << transform[i](1, 1) << " " << transform[i](1, 2) << " " << transform[i](1, 3) << "\n";
+			file << transform[i](2, 0) << " " << transform[i](2, 1) << " " << transform[i](2, 2) << " " << transform[i](2, 3) << "\n";
+			file << transform[i](3, 0) << " " << transform[i](3, 1) << " " << transform[i](3, 2) << " " << transform[i](3, 3) << "\n";
 		}
 	}
 
-	//// smpl step
-	//for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
-	//{
-	//	//DirectX::XMVECTOR j = DirectX::XMVectorSetW(m_Joints[i], 0.f);
-	//	DirectX::XMFLOAT4 j;
-	//	DirectX::XMStoreFloat4(&j, DirectX::XMVector4Transform(
-	//		DirectX::XMVectorSetW(m_Joints[i], 0.f), transform[i]));
-	//	DirectX::XMFLOAT4X4 m;
-	//	m._11 = 0.f;
-	//	m._12 = 0.f;
-	//	m._13 = 0.f;
-	//	m._14 = 0.f;
-	//	m._21 = 0.f;
-	//	m._22 = 0.f;
-	//	m._23 = 0.f;
-	//	m._24 = 0.f;
-	//	m._31 = 0.f;
-	//	m._32 = 0.f;
-	//	m._33 = 0.f;
-	//	m._34 = 0.f;
-	//	m._41 = j.x;
-	//	m._42 = j.y;
-	//	m._43 = j.z;
-	//	m._44 = j.w;
-	//	transform[i] = transform[i] - DirectX::XMLoadFloat4x4(&m);
-	//}
+	// smpl step
+	for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
+	{
+		transform[i] = skinPartTwo(transform[i], m_Joints[i]);
+		m_Transform[i] = util::MATRIX(transform[i]);
+	}
 
-	//for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
-	//{
-	//	// Transpose, because HLSL expects matrices in the column major form
-	//	DirectX::XMStoreFloat4x4(&m_Transform[i], DirectX::XMMatrixTranspose(transform[i]));
-	//}
+	if (traceable)
+	{
+		util::TempFile file("Skinning2");
+		for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
+		{
+			file << transform[i](0, 0) << " " << transform[i](0, 1) << " " << transform[i](0, 2) << " " << transform[i](0, 3) << L"\n";
+			file << transform[i](1, 0) << " " << transform[i](1, 1) << " " << transform[i](1, 2) << " " << transform[i](1, 3) << "\n";
+			file << transform[i](2, 0) << " " << transform[i](2, 1) << " " << transform[i](2, 2) << " " << transform[i](2, 3) << "\n";
+			file << transform[i](3, 0) << " " << transform[i](3, 1) << " " << transform[i](3, 2) << " " << transform[i](3, 3) << "\n";
+		}
+	}
 
 	if (traceable)
 	{

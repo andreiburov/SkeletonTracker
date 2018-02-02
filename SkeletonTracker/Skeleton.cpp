@@ -1,6 +1,11 @@
 #include "stdafx.h"
 #include "Skeleton.h"
 
+float mirror(float x, int width)
+{
+	return width - x;
+}
+
 /// <summary>
 /// Converts a skeleton point to screen space
 /// </summary>
@@ -19,7 +24,7 @@ D2D1_POINT_2F Skeleton::SkeletonToScreen(Vector4 skeletonPoint, int width, int h
 	// NuiTransformSkeletonToDepthImage returns coordinates in NUI_IMAGE_RESOLUTION_320x240 space
 	NuiTransformSkeletonToDepthImage(skeletonPoint, &x, &y, &depth);
 
-	float screenPointX = static_cast<float>(x * width) / cScreenWidth;
+	float screenPointX = mirror(static_cast<float>(x * width) / cScreenWidth, width);
 	float screenPointY = static_cast<float>(y * height) / cScreenHeight;
 
 	return D2D1::Point2F(screenPointX, screenPointY);
