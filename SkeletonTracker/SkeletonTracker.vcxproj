@@ -165,7 +165,7 @@
     <ClInclude Include="SimpleHierarchy.h" />
     <ClInclude Include="SimpleModel.h" />
     <ClInclude Include="SimplePose.h" />
-    <ClInclude Include="SimpleSkeleton.h" />
+    <ClInclude Include="SimpleSkeleton2D.h" />
     <ClInclude Include="KinectSkeleton.h" />
     <ClInclude Include="Skeleton.h" />
     <ClInclude Include="stdafx.h" />
@@ -178,7 +178,7 @@
     <ClCompile Include="SimpleHierarchy.cpp" />
     <ClCompile Include="SimpleModel.cpp" />
     <ClCompile Include="SimplePose.cpp" />
-    <ClCompile Include="SimpleSkeleton.cpp" />
+    <ClCompile Include="SimpleSkeleton2D.cpp" />
     <ClCompile Include="KinectSkeleton.cpp" />
     <ClCompile Include="Skeleton.cpp" />
     <ClCompile Include="stdafx.cpp">

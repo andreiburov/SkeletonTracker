@@ -2,7 +2,7 @@
 
 #include "resource.h"
 #include "KinectSkeleton.h"
-#include "SimpleSkeleton.h"
+#include "SimpleSkeleton2D.h"
 #include "SimpleModel.h"
 
 class Application
@@ -75,7 +75,7 @@ private:
 	HANDLE                   m_hNextSkeletonEvent;
 
 	KinectSkeleton			 m_KinectSkeleton;
-	SimpleSkeleton			 m_SimpleSkeleton;
+	SimpleSkeleton2D			 m_SimpleSkeleton;
 	SimpleRotations			 m_Rotations;
 	SimpleModel				 m_SimpleModel;
 	float					 m_aspectRatio; // Aspect ratio of view-space X:Y

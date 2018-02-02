@@ -256,7 +256,7 @@ LRESULT CALLBACK Application::DlgProc(HWND hWnd, UINT message, WPARAM wParam, LP
 			m_KinectSkeleton.PrintJoints();
 		}
 
-		// Get the transform and apply it to SimpleSkeleton (blue skeleton)
+		// Get the transform and apply it to SimpleSkeleton2D (blue skeleton)
 		if (IDC_APPLY_TRANSFORM == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
 			Vector4 scale;

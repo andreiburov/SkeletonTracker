@@ -53,7 +53,8 @@ const _SMPL_SKELETON_POSITION_INDEX SMPL_INDEX_FROM_KINECT_INDEX[NUI_SKELETON_PO
 	SMPL_SKELETON_POSITION_FOOT_RIGHT,
 };
 
-struct SimpleRotations {
+struct SimpleRotations 
+{
 	DirectX::XMVECTOR rotations[SMPL_SKELETON_POSITION_COUNT];
 
 	SimpleRotations()
@@ -76,4 +77,40 @@ struct SimpleRotations {
 	}
 
 	void printThetas() const;
+};
+
+struct SimpleSkeleton 
+{
+	Vector4 joints[SMPL_SKELETON_POSITION_COUNT];
+
+	SimpleSkeleton()
+	{
+		ZeroMemory(joints, sizeof(joints));
+		for (unsigned short i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
+		{
+			std::ifstream in("SimpleModel/smpl_skeleton.obj", std::ios::in);
+			if (!in)
+			{
+				MessageBoxW(NULL, (std::wstring(L"Could not open SimpleModel/smpl_skeleton.obj")).c_str(), L"File error", MB_ICONERROR | MB_OK);
+			}
+
+			for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
+			{
+				std::string vertex;
+				in >> vertex >> joints[i].x >> joints[i].y >> joints[i].z;
+				joints[i].w = 1.f;
+			}
+			in.close();
+		}
+	}
+
+	Vector4 operator[](_SMPL_SKELETON_POSITION_INDEX i) const
+	{
+		return joints[i];
+	}
+
+	Vector4& operator[](_SMPL_SKELETON_POSITION_INDEX i)
+	{
+		return joints[i];
+	}
 };

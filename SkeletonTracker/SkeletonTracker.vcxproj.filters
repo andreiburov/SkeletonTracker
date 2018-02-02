@@ -27,9 +27,6 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SimpleSkeleton.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="KinectSkeleton.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -54,12 +51,12 @@
     <ClInclude Include="SimpleDefinitions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SimpleSkeleton2D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SimpleSkeleton.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="KinectSkeleton.cpp">
@@ -84,6 +81,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SimpleDefinitions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SimpleSkeleton2D.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

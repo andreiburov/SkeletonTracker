@@ -1,41 +1,33 @@
 #include "stdafx.h"
-#include "SimpleSkeleton.h"
+#include "SimpleSkeleton2D.h"
 #include "Utils.h"
 
-SimpleSkeleton::SimpleSkeleton(const float jointThickness, const float boneThickness)
+SimpleSkeleton2D::SimpleSkeleton2D(const float jointThickness, const float boneThickness)
 	: m_JointThickness(jointThickness), m_BoneThickness(boneThickness)
 {
-	ZeroMemory(&m_JointsRest, sizeof(Vector4)*SMPL_SKELETON_POSITION_COUNT);
 	ZeroMemory(&m_JointsPose, sizeof(Vector4)*SMPL_SKELETON_POSITION_COUNT);
 
-	std::ifstream in("SimpleModel/smpl_skeleton.obj", std::ios::in);
 	for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
 	{
-		std::string vertex;
-		Vector4 v;
-		v.w = 1.f;
-		in >> vertex >> v.x >> v.y >> v.z;
-		m_JointsRest[i] = v;
-		m_JointsPose[i] = v;
+		m_JointsPose[i] = m_JointsRest[(_SMPL_SKELETON_POSITION_INDEX)i];
 	}
-	in.close();
 
 	Vector4 scale = util::VECTOR4(5.5f, 5.3f, 5.0f);
 	Vector4 translate = util::VECTOR4(0.0f, 2.0f, 12.0f);
 	ApplyTransformations(scale, translate);
 }
 
-void SimpleSkeleton::ApplyTransformations(Vector4& scale, Vector4& translate)
+void SimpleSkeleton2D::ApplyTransformations(Vector4& scale, Vector4& translate)
 {
 	for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
 	{
-		m_JointsPose[i].x = m_JointsRest[i].x * scale.x + translate.x;
-		m_JointsPose[i].y = m_JointsRest[i].y * scale.y + translate.y;
-		m_JointsPose[i].z = m_JointsRest[i].z * scale.z + translate.z;
+		m_JointsPose[i].x = m_JointsRest[(_SMPL_SKELETON_POSITION_INDEX)i].x * scale.x + translate.x;
+		m_JointsPose[i].y = m_JointsRest[(_SMPL_SKELETON_POSITION_INDEX)i].y * scale.y + translate.y;
+		m_JointsPose[i].z = m_JointsRest[(_SMPL_SKELETON_POSITION_INDEX)i].z * scale.z + translate.z;
 	}
 }
 
-void SimpleSkeleton::Render(ID2D1HwndRenderTarget* pRenderTarget, ID2D1SolidColorBrush* pBrushJointSimple,
+void SimpleSkeleton2D::Render(ID2D1HwndRenderTarget* pRenderTarget, ID2D1SolidColorBrush* pBrushJointSimple,
 	ID2D1SolidColorBrush* pBrushBoneSimple, int windowWidth, int windowHeight)
 {
 	for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; ++i)
