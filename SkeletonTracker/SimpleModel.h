@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SimpleHierarchy.h"
+#include "SimpleLBS.h"
 #include "SimplePose.h"
 
 class SimpleModel
@@ -63,9 +63,9 @@ private:
 	WVPMatricesConstantBuffer m_WVPMatricesConstantBufferData;
 	DirectX::XMMATRIX m_View;
 
-	// Hierarchy for Linear Blend Skinning
-	ID3D11Buffer* m_pHierarchyConstantBuffer = nullptr;
-	SimpleHierarchy m_Hierarchy;
+	// Linear Blend Skinning
+	ID3D11Buffer* m_pLBSConstantBuffer = nullptr;
+	SimpleLBS m_LBS;
 
 	// Thetas for SMPL
 	ID3D11Buffer* m_pPoseConstantBuffer = nullptr;

@@ -7,7 +7,7 @@
 
 class Application
 {
-	static const int        cStatusMessageMaxLen = MAX_PATH * 2;
+	static const int cStatusMessageMaxLen = MAX_PATH * 2;
 
 public:
 
@@ -74,11 +74,11 @@ private:
 
 	HANDLE                   m_hNextSkeletonEvent;
 
-	KinectSkeleton			 m_KinectSkeleton;
-	SimpleSkeleton2D			 m_SimpleSkeleton;
-	SimpleRotations			 m_Rotations;
-	SimpleModel				 m_SimpleModel;
-	float					 m_aspectRatio; // Aspect ratio of view-space X:Y
+	KinectSkeleton           m_KinectSkeleton;
+	SimpleSkeleton2D         m_SimpleSkeleton;
+	SimpleRotations          m_Rotations;
+	SimpleModel              m_SimpleModel;
+	float                    m_aspectRatio; // Aspect ratio of view-space X:Y
 
 	/// <summary>
 	/// Create the first connected Kinect found 

@@ -117,14 +117,14 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilen
 	// Create hierarchy ConstantBuffer for linear blend skinning
 	{
 		D3D11_BUFFER_DESC constantBufferDesc = { 0 };
-		constantBufferDesc.ByteWidth = m_Hierarchy.getByteWidth();
+		constantBufferDesc.ByteWidth = m_LBS.getByteWidth();
 		constantBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 		constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		constantBufferDesc.CPUAccessFlags = 0;
 		constantBufferDesc.MiscFlags = 0;
 		constantBufferDesc.StructureByteStride = 0;
 
-		VALIDATE(pd3dDevice->CreateBuffer(&constantBufferDesc, nullptr, &m_pHierarchyConstantBuffer),
+		VALIDATE(pd3dDevice->CreateBuffer(&constantBufferDesc, nullptr, &m_pLBSConstantBuffer),
 			L"Could not create HierarchyConstantBuffer");
 	}
 
@@ -195,8 +195,8 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext, const SimpleRot
 
 	if (!online) rotations.printThetas();
 
-	m_Hierarchy.UpdateWithEigenSmplStyle(rotations, !online);
-	pd3dDeviceContext->UpdateSubresource(m_pHierarchyConstantBuffer, 0, nullptr, m_Hierarchy.getHierarchyConstantBuffer(), 0, 0);
+	m_LBS.UpdateWithEigenSmplStyle(rotations, !online);
+	pd3dDeviceContext->UpdateSubresource(m_pLBSConstantBuffer, 0, nullptr, m_LBS.getHierarchyConstantBuffer(), 0, 0);
 	
 	m_Pose.Update(rotations, !online);
 	pd3dDeviceContext->UpdateSubresource(m_pPoseConstantBuffer, 0, nullptr, m_Pose.getPoseConstantBuffer(), 0, 0);
@@ -214,7 +214,7 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext, const SimpleRot
 
 	// Set the vertex and pixel shader stage state
 	pd3dDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
-	pd3dDeviceContext->VSSetConstantBuffers(0, 1, &m_pHierarchyConstantBuffer);
+	pd3dDeviceContext->VSSetConstantBuffers(0, 1, &m_pLBSConstantBuffer);
 	pd3dDeviceContext->VSSetConstantBuffers(1, 1, &m_pPoseConstantBuffer);
 	pd3dDeviceContext->VSSetConstantBuffers(2, 1, &m_pVSParametersConstantBuffer);
 	pd3dDeviceContext->VSSetShaderResources(0, 1, &m_pPosedirsSRV);
@@ -236,7 +236,7 @@ void SimpleModel::Clear()
 	SAFE_RELEASE(m_pVertexBuffer);
 	SAFE_RELEASE(m_pIndexBuffer);
 	SAFE_RELEASE(m_pWVPMatricesConstantBuffer);
-	SAFE_RELEASE(m_pHierarchyConstantBuffer);
+	SAFE_RELEASE(m_pLBSConstantBuffer);
 	SAFE_RELEASE(m_pPosedirsSRV);
 }
 

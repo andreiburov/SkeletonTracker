@@ -3,12 +3,10 @@
 #include "Skeleton.h"
 #include "SimpleDefinitions.h"
 
-#define NUI_SKELETON_POSITION_UNDEFINED -1
-
 class SimpleSkeleton2D : public Skeleton 
 {
 private:
-	SimpleSkeleton m_JointsRest;
+	Vector4 m_JointsRest[SMPL_SKELETON_POSITION_COUNT];
 	Vector4 m_JointsPose[SMPL_SKELETON_POSITION_COUNT];
 	D2D1_POINT_2F m_Points[SMPL_SKELETON_POSITION_COUNT];
 	const float m_JointThickness;

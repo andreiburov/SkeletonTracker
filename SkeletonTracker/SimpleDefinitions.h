@@ -53,28 +53,42 @@ const _SMPL_SKELETON_POSITION_INDEX SMPL_INDEX_FROM_KINECT_INDEX[NUI_SKELETON_PO
 	SMPL_SKELETON_POSITION_FOOT_RIGHT,
 };
 
+const int SMPL_PARENT_INDEX[SMPL_SKELETON_POSITION_COUNT] = {
+	-1,
+	SMPL_SKELETON_POSITION_HIP_CENTER,
+	SMPL_SKELETON_POSITION_HIP_CENTER,
+	SMPL_SKELETON_POSITION_HIP_CENTER,
+	SMPL_SKELETON_POSITION_HIP_RIGHT,
+	SMPL_SKELETON_POSITION_HIP_LEFT,
+	SMPL_SKELETON_POSITION_STOMACH,
+	SMPL_SKELETON_POSITION_KNEE_RIGHT,
+	SMPL_SKELETON_POSITION_KNEE_LEFT,
+	SMPL_SKELETON_POSITION_BACKBONE,
+	SMPL_SKELETON_POSITION_ANKLE_RIGHT,
+	SMPL_SKELETON_POSITION_ANKLE_LEFT,
+	SMPL_SKELETON_POSITION_CHEST,
+	SMPL_SKELETON_POSITION_CHEST,
+	SMPL_SKELETON_POSITION_CHEST,
+	SMPL_SKELETON_POSITION_SHOULDER_CENTER,
+	SMPL_SKELETON_POSITION_PECK_RIGHT,
+	SMPL_SKELETON_POSITION_PECK_LEFT,
+	SMPL_SKELETON_POSITION_SHOULDER_RIGHT,
+	SMPL_SKELETON_POSITION_SHOULDER_LEFT,
+	SMPL_SKELETON_POSITION_ELBOW_RIGHT,
+	SMPL_SKELETON_POSITION_ELBOW_LEFT,
+	SMPL_SKELETON_POSITION_WRIST_RIGHT,
+	SMPL_SKELETON_POSITION_WRIST_LEFT
+};
+
 struct SimpleRotations 
 {
 	DirectX::XMVECTOR rotations[SMPL_SKELETON_POSITION_COUNT];
 
-	SimpleRotations()
-	{
-		ZeroMemory(rotations, sizeof(rotations));
-		for (unsigned short i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
-		{
-			rotations[i] = DirectX::XMQuaternionIdentity();
-		}
-	}
+	SimpleRotations();
 
-	DirectX::XMVECTOR operator[](_SMPL_SKELETON_POSITION_INDEX i) const
-	{
-		return rotations[i];
-	}
+	DirectX::XMVECTOR operator[](_SMPL_SKELETON_POSITION_INDEX i) const;
 
-	DirectX::XMVECTOR& operator[](_SMPL_SKELETON_POSITION_INDEX i)
-	{
-		return rotations[i];
-	}
+	DirectX::XMVECTOR& operator[](_SMPL_SKELETON_POSITION_INDEX i);
 
 	void printThetas() const;
 };
@@ -83,34 +97,9 @@ struct SimpleSkeleton
 {
 	Vector4 joints[SMPL_SKELETON_POSITION_COUNT];
 
-	SimpleSkeleton()
-	{
-		ZeroMemory(joints, sizeof(joints));
-		for (unsigned short i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
-		{
-			std::ifstream in("SimpleModel/smpl_skeleton.obj", std::ios::in);
-			if (!in)
-			{
-				MessageBoxW(NULL, (std::wstring(L"Could not open SimpleModel/smpl_skeleton.obj")).c_str(), L"File error", MB_ICONERROR | MB_OK);
-			}
+	SimpleSkeleton();
 
-			for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
-			{
-				std::string vertex;
-				in >> vertex >> joints[i].x >> joints[i].y >> joints[i].z;
-				joints[i].w = 1.f;
-			}
-			in.close();
-		}
-	}
-
-	Vector4 operator[](_SMPL_SKELETON_POSITION_INDEX i) const
-	{
-		return joints[i];
-	}
-
-	Vector4& operator[](_SMPL_SKELETON_POSITION_INDEX i)
-	{
-		return joints[i];
-	}
+	Vector4 operator[](_SMPL_SKELETON_POSITION_INDEX i) const;
 };
+
+extern SimpleSkeleton g_SimpleSkeleton;

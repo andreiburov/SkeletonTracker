@@ -5,11 +5,13 @@
 SimpleSkeleton2D::SimpleSkeleton2D(const float jointThickness, const float boneThickness)
 	: m_JointThickness(jointThickness), m_BoneThickness(boneThickness)
 {
-	ZeroMemory(&m_JointsPose, sizeof(Vector4)*SMPL_SKELETON_POSITION_COUNT);
+	ZeroMemory(&m_JointsRest, sizeof(m_JointsRest));
+	ZeroMemory(&m_JointsPose, sizeof(m_JointsPose));
 
 	for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
 	{
-		m_JointsPose[i] = m_JointsRest[(_SMPL_SKELETON_POSITION_INDEX)i];
+		m_JointsRest[i] = g_SimpleSkeleton[(_SMPL_SKELETON_POSITION_INDEX)i];
+		m_JointsPose[i] = m_JointsRest[i];
 	}
 
 	Vector4 scale = util::VECTOR4(5.5f, 5.3f, 5.0f);
