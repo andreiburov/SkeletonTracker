@@ -15,7 +15,8 @@ void main(
 	for (uint i = 0; i < 2; i++)
 	{
 		PixelShaderInput element = (PixelShaderInput)0;
-		element.pos = input[i].pos;
+		float4 pos = mul(input[i].pos, worldView);
+		element.pos = mul(pos, projection);
 		output.Append(element);
 	}
 }

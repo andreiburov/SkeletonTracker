@@ -70,7 +70,8 @@ private:
 	SimpleLBS m_LBS;
 
 	// Thetas for SMPL
-	ID3D11Buffer* m_pPoseConstantBuffer = nullptr;
+	ID3D11Buffer* m_pPoseBuffer = nullptr;
+	ID3D11ShaderResourceView*  m_pPoseSRV = nullptr;
 	SimplePose m_Pose;
 
 	// Per-vertex basis of position directions for SMPL

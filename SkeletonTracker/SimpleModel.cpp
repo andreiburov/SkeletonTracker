@@ -104,8 +104,8 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilen
 			L"Could not create WVPMatricesConstantBuffer");
 	}
 
-	DirectX::XMFLOAT4 eye(0, 1, -2, 1);
-	DirectX::XMFLOAT4 focus(0, 0, 0, 1);
+	DirectX::XMFLOAT4 eye(0, -0.3, -2, 1);
+	DirectX::XMFLOAT4 focus(0, -0.3, 0, 1);
 	DirectX::XMFLOAT4 up(0, 1, 0, 0);
 	m_View = DirectX::XMMatrixLookAtLH(DirectX::XMLoadFloat4(&eye),
 		DirectX::XMLoadFloat4(&focus),
@@ -128,18 +128,27 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilen
 			L"Could not create HierarchyConstantBuffer");
 	}
 
-	// Create pose ConstantBuffer for SMPL
+	// Create Pose SRV for SMPL
 	{
 		D3D11_BUFFER_DESC constantBufferDesc = { 0 };
 		constantBufferDesc.ByteWidth = m_Pose.getByteWidth();
-		constantBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-		constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		constantBufferDesc.CPUAccessFlags = 0;
+		constantBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+		constantBufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+		constantBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 		constantBufferDesc.MiscFlags = 0;
 		constantBufferDesc.StructureByteStride = 0;
 
-		VALIDATE(pd3dDevice->CreateBuffer(&constantBufferDesc, nullptr, &m_pPoseConstantBuffer),
-			L"Could not create PoseConstantBuffer");
+		VALIDATE(pd3dDevice->CreateBuffer(&constantBufferDesc, nullptr, &m_pPoseBuffer),
+			L"Could not create Pose Buffer");
+
+		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+		srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+		srvDesc.ViewDimension = D3D_SRV_DIMENSION_BUFFER;
+		srvDesc.Buffer.FirstElement = 0;
+		srvDesc.Buffer.NumElements = SMPL_POSEDIRS_COUNT;
+
+		VALIDATE(pd3dDevice->CreateShaderResourceView(m_pPoseBuffer, &srvDesc, &m_pPoseSRV),
+			L"Could not create Pose SRV");
 	}
 
 	{
@@ -156,10 +165,10 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilen
 		posedirsBufferData.SysMemPitch = 0;
 		posedirsBufferData.SysMemSlicePitch = 0;
 
-		ID3D11Buffer* pPosedirsConstantBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer> posedirsBuffer;
 
-		VALIDATE(pd3dDevice->CreateBuffer(&posedirsBufferDesc, &posedirsBufferData, &pPosedirsConstantBuffer),
-			L"Could not create posedirs");
+		VALIDATE(pd3dDevice->CreateBuffer(&posedirsBufferDesc, &posedirsBufferData, posedirsBuffer.GetAddressOf()),
+			L"Could not create Posedirs Buffer");
 		
 		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
 		srvDesc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
@@ -167,8 +176,8 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilen
 		srvDesc.Buffer.FirstElement = 0;
 		srvDesc.Buffer.NumElements = VERTEX_COUNT * SMPL_POSEDIRS_COUNT;
 
-		VALIDATE(pd3dDevice->CreateShaderResourceView(pPosedirsConstantBuffer, &srvDesc, &m_pPosedirsSRV),
-			L"Could not create posedirs SRV");
+		VALIDATE(pd3dDevice->CreateShaderResourceView(posedirsBuffer.Get(), &srvDesc, &m_pPosedirsSRV),
+			L"Could not create Posedirs SRV");
 	}
 
 	delete[] posedirs;
@@ -182,13 +191,13 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext, const SimpleRot
 	static const float range = DirectX::XM_PIDIV2/3.f;
 
 	// Update the constant buffer to rotate the cube model
-	DirectX::XMMATRIX transform = 
-		DirectX::XMMatrixMultiply(DirectX::XMMatrixRotationY(degree), m_View);
+	DirectX::XMMATRIX transform = DirectX::XMMatrixScaling(1,1.5,1) * 
+		DirectX::XMMatrixRotationY(degree)*m_View;
 	DirectX::XMStoreFloat4x4(&m_WVPMatricesConstantBufferData.worldView, DirectX::XMMatrixTranspose(transform));
 	DirectX::XMStoreFloat4x4(&m_WVPMatricesConstantBufferData.worldViewIT, 
 		DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(nullptr, DirectX::XMMatrixTranspose(transform))));
 
-	//degree += 0.01f;
+	degree += 0.05f;
 	//elapsed += 0.01f;
 
 	pd3dDeviceContext->UpdateSubresource(m_pWVPMatricesConstantBuffer, 0, nullptr, &m_WVPMatricesConstantBufferData, 0, 0);
@@ -199,8 +208,14 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext, const SimpleRot
 	pd3dDeviceContext->UpdateSubresource(m_pLBSConstantBuffer, 0, nullptr, m_LBS.getHierarchyConstantBuffer(), 0, 0);
 	
 	m_Pose.Update(rotations, !online);
-	pd3dDeviceContext->UpdateSubresource(m_pPoseConstantBuffer, 0, nullptr, m_Pose.getPoseConstantBuffer(), 0, 0);
-
+	{
+		D3D11_MAPPED_SUBRESOURCE mappedResource;
+		ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));
+		pd3dDeviceContext->Map(m_pPoseBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+		memcpy(mappedResource.pData, m_Pose.getPoseData(), m_Pose.getByteWidth());
+		pd3dDeviceContext->Unmap(m_pPoseBuffer, 0);
+	}
+	
 	pd3dDeviceContext->UpdateSubresource(m_pVSParametersConstantBuffer, 0, nullptr, &m_VSParametersConstantBufferData, 0, 0);
 
 	pd3dDeviceContext->IASetInputLayout(m_pInputLayout);
@@ -215,9 +230,9 @@ void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext, const SimpleRot
 	// Set the vertex and pixel shader stage state
 	pd3dDeviceContext->VSSetShader(m_pVertexShader, nullptr, 0);
 	pd3dDeviceContext->VSSetConstantBuffers(0, 1, &m_pLBSConstantBuffer);
-	pd3dDeviceContext->VSSetConstantBuffers(1, 1, &m_pPoseConstantBuffer);
-	pd3dDeviceContext->VSSetConstantBuffers(2, 1, &m_pVSParametersConstantBuffer);
+	pd3dDeviceContext->VSSetConstantBuffers(1, 1, &m_pVSParametersConstantBuffer);
 	pd3dDeviceContext->VSSetShaderResources(0, 1, &m_pPosedirsSRV);
+	pd3dDeviceContext->VSSetShaderResources(1, 1, &m_pPoseSRV);
 
 	pd3dDeviceContext->GSSetShader(m_pGeometryShader, nullptr, 0);
 	pd3dDeviceContext->GSSetConstantBuffers(0, 1, &m_pWVPMatricesConstantBuffer);
@@ -238,7 +253,8 @@ void SimpleModel::Clear()
 	SAFE_RELEASE(m_pVSParametersConstantBuffer);
 	SAFE_RELEASE(m_pWVPMatricesConstantBuffer);
 	SAFE_RELEASE(m_pLBSConstantBuffer);
-	SAFE_RELEASE(m_pPoseConstantBuffer);
+	SAFE_RELEASE(m_pPoseBuffer);
+	SAFE_RELEASE(m_pPoseSRV);
 	SAFE_RELEASE(m_pPosedirsSRV);
 }
 

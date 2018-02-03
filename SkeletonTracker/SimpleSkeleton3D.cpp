@@ -97,8 +97,8 @@ void SimpleSkeleton3D::Create(ID3D11Device* pd3dDevice, const std::wstring& vert
 			L"Could not create WVPMatricesConstantBuffer");
 	}
 
-	DirectX::XMFLOAT4 eye(0, 1, -2, 1);
-	DirectX::XMFLOAT4 focus(0, 0, 0, 1);
+	DirectX::XMFLOAT4 eye(0, -0.3, -2, 1);
+	DirectX::XMFLOAT4 focus(0, -0.3, 0, 1);
 	DirectX::XMFLOAT4 up(0, 1, 0, 0);
 	m_View = DirectX::XMMatrixLookAtLH(DirectX::XMLoadFloat4(&eye),
 		DirectX::XMLoadFloat4(&focus),
@@ -137,9 +137,15 @@ void SimpleSkeleton3D::UpdateAxisAngles(const SimpleRotations& rotations)
 void SimpleSkeleton3D::Render(ID3D11DeviceContext* pd3dDeviceContext, 
 	const SimpleRotations& rotations, bool online)
 {
-	DirectX::XMStoreFloat4x4(&m_WVPMatricesConstantBufferData.worldView, 
-		DirectX::XMMatrixTranspose(m_View));
-	
+	static float degree = DirectX::XM_PI;
+
+	// Update the constant buffer to rotate the cube model
+	DirectX::XMMATRIX transform = DirectX::XMMatrixScaling(1, 1.5, 1) *
+		DirectX::XMMatrixRotationY(degree)*m_View;
+	DirectX::XMStoreFloat4x4(&m_WVPMatricesConstantBufferData.worldView, DirectX::XMMatrixTranspose(transform));
+
+	degree += 0.01f;
+
 	pd3dDeviceContext->UpdateSubresource(m_pWVPMatricesConstantBuffer, 0, nullptr, &m_WVPMatricesConstantBufferData, 0, 0);
 
 	if (!online) rotations.printThetas();

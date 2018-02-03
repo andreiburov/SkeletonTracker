@@ -8,17 +8,13 @@ cbuffer lbsConstantBuffer : register(b0)
 	matrix transform[SMPL_SKELETON_POSITION_COUNT];
 };
 
-cbuffer thetaConstantBuffer : register(b1)
-{
-	float theta[SMPL_POSEDIRS_COUNT];
-};
-
-cbuffer vsParametersConstantBuffer : register(b2)
+cbuffer vsParametersConstantBuffer : register(b1)
 {
 	bool lbsOnly;
 }
 
 Buffer<float3> posedirs : register(t0);
+Buffer<float> theta : register(t1);
 
 struct VertexShaderInput
 {
