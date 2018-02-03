@@ -14,7 +14,8 @@ public:
 		const std::string& posedirsFilename, const std::wstring& vertexShaderFileName,
 		const std::wstring& geometryShaderFilename,	const std::wstring& pixelShaderFilename, float aspectRatio);
 
-	void Render(ID3D11DeviceContext*, const SimpleRotations& rotations, bool online);
+	void Render(ID3D11DeviceContext*, const SimpleRotations& rotations, bool traceable);
+	void ApplyTransformations(Vector4 scaleXYZ, Vector4 rotateXY);
 	void ToggleLBSonly() { m_VSParametersConstantBufferData.lbsOnly = !m_VSParametersConstantBufferData.lbsOnly; }
 
 	void Clear();
@@ -63,6 +64,7 @@ private:
 	// World/View/Perspective Matrices
 	ID3D11Buffer* m_pWVPMatricesConstantBuffer = nullptr; 
 	WVPMatricesConstantBuffer m_WVPMatricesConstantBufferData;
+	DirectX::XMMATRIX m_World;
 	DirectX::XMMATRIX m_View;
 
 	// Linear Blend Skinning Matrices

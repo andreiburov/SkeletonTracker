@@ -46,7 +46,11 @@ private:
 	// Windows Interface
 	HWND                     m_hWnd;
 	bool					 m_bOnline;
+	bool                     m_bRenderModel;
 	bool                     m_bRenderSkeleton3D;
+	bool                     m_bRenderKinect3D;
+	bool                     m_bTraceable2D;
+	bool					 m_bTraceable3D;
 
 	// Current Kinect
 	INuiSensor*              m_pNuiSensor;
@@ -104,6 +108,7 @@ private:
 	void					CleanupDevice();
 	void					RenderSimpleModel();
 	void                    RenderSimpleSkeleton3D();
+	void                    RenderKinectSkeleton3D();
 
 	/// <summary>
 	/// Ensure necessary Direct2d resources are created

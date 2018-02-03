@@ -27,7 +27,7 @@ DirectX::XMVECTOR& SimpleRotations::operator[](_SMPL_SKELETON_POSITION_INDEX i)
 
 void SimpleRotations::printThetas() const
 {
-	util::TempFile file("Thetas");
+	util::TempFile file("Thetas/");
 	file << L"[ ";
 
 	int N = SMPL_SKELETON_POSITION_COUNT;

@@ -154,14 +154,19 @@ namespace util {
 		this->w = v.w;
 	}
 
-	TempFile::TempFile(std::string path)
+	std::string getCurrentTime()
 	{
 		auto t = std::time(nullptr);
 		struct tm tm;
 		localtime_s(&tm, &t);
 		std::ostringstream oss;
-		oss << std::put_time(&tm, path.append("/%d-%m-%Y_%H-%M-%S.txt").c_str());
-		file.open(oss.str(), std::ios::out);
+		oss << std::put_time(&tm, std::string("%d-%m-%Y_%H-%M-%S").c_str());
+		return oss.str();
+	}
+
+	TempFile::TempFile(std::string path)
+	{
+		file.open(path.append(getCurrentTime()).append(".txt"), std::ios::out);
 	}
 
 	TempFile::~TempFile()

@@ -6,7 +6,9 @@ using namespace DirectX;
 
 void SimplePose::Update(SimpleRotations rotations, bool traceable)
 {
-	util::TempFile file("Rotations");
+	std::wofstream file;
+	if (traceable) file.open(std::string("Rotations/")
+		.append(util::getCurrentTime()).append(".txt"), std::ios::out);
 
 	for (unsigned short i = 1; i < SMPL_SKELETON_POSITION_COUNT; i++)
 	{
@@ -20,4 +22,6 @@ void SimplePose::Update(SimpleRotations rotations, bool traceable)
 			file << m_R[i-1]._31 << " " << m_R[i-1]._32 << " " << m_R[i-1]._33 << "\n";
 		}
 	}
+
+	if (traceable) file.close();
 }

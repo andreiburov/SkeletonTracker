@@ -37,6 +37,8 @@ namespace util {
 		friend std::wostream& operator<<(std::wostream& out, const Vec4& v);
 	};
 
+	std::string getCurrentTime();
+
 	struct TempFile {
 		std::wofstream file;
 

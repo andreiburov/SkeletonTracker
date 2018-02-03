@@ -23,7 +23,11 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 Application::Application() :
 	m_bOnline(false),
+	m_bRenderModel(true),
 	m_bRenderSkeleton3D(false),
+	m_bRenderKinect3D(false),
+	m_bTraceable2D(false),
+	m_bTraceable3D(false),
 	m_pD2DFactory(NULL),
 	m_hNextSkeletonEvent(INVALID_HANDLE_VALUE),
 	m_pRenderTarget(NULL),
@@ -110,17 +114,8 @@ int Application::Run(HINSTANCE hInstance, int nCmdShow)
 		// m_KinectRotations is updated when T-Pose is calibrated
 		CheckKinectData();
 		if (m_bOnline) PassRotationsFromKinectToSimple();
-		
-		if (!m_bRenderSkeleton3D)
-		{
-			RenderSimpleModel();
-		}
-		else 
-		{
-			RenderSimpleSkeleton3D();
-		}
 
-		if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
+		while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
 		{
 			// If a dialog message will be taken care of by the dialog proc
 			if ((hWndApp != NULL) && IsDialogMessageW(hWndApp, &msg))
@@ -131,6 +126,10 @@ int Application::Run(HINSTANCE hInstance, int nCmdShow)
 			TranslateMessage(&msg);
 			DispatchMessageW(&msg);
 		}
+		
+		if (m_bRenderModel)	RenderSimpleModel();
+		if (m_bRenderSkeleton3D) RenderSimpleSkeleton3D();
+		if (m_bRenderKinect3D) RenderKinectSkeleton3D();
 	}
 
 	m_SimpleModel.Clear();
@@ -204,6 +203,9 @@ LRESULT CALLBACK Application::DlgProc(HWND hWnd, UINT message, WPARAM wParam, LP
 		// Bind application window handle
 		m_hWnd = hWnd;
 
+		HWND hModel = GetDlgItem(m_hWnd, IDC_MODEL);
+		Button_SetCheck(hModel, true);
+
 		// Init Direct2D
 		D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &m_pD2DFactory);
 
@@ -246,17 +248,36 @@ LRESULT CALLBACK Application::DlgProc(HWND hWnd, UINT message, WPARAM wParam, LP
 			m_bOnline = !m_bOnline;
 		}
 
-		// Toggle model rendering to skeleton
-		if (IDC_RENDER_SKELETON == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+		// Radio Buttons
+		if (IDC_MODEL == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			// Toggle out
-			m_bRenderSkeleton3D = !m_bRenderSkeleton3D;
+			m_bRenderModel = true;
+			m_bRenderSkeleton3D = false;
+			m_bRenderKinect3D = false;
 		}
+
+		if (IDC_SKELETON == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+		{
+			m_bRenderModel = false;
+			m_bRenderSkeleton3D = true;
+			m_bRenderKinect3D = false;
+		}
+		if (IDC_KINECT == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+		{
+			m_bRenderModel = false;
+			m_bRenderSkeleton3D = false;
+			m_bRenderKinect3D = true;
+		}
+		// End
 
 		// If online is false (i.e. traceable) apply rotations to the SimpleModel
 		if (IDC_APPLY_ROTATIONS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			if (!m_bOnline) PassRotationsFromKinectToSimple();
+			if (!m_bOnline)
+			{
+				PassRotationsFromKinectToSimple();
+				m_bTraceable3D = true;
+			}
 		}
 
 		// Toggle LBS only
@@ -266,7 +287,7 @@ LRESULT CALLBACK Application::DlgProc(HWND hWnd, UINT message, WPARAM wParam, LP
 		}
 
 		// Print the joints to the local timestamped file
-		if (IDC_PRINT_JOINTS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+		if (IDC_NEXT_FRAME == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
 			m_KinectSkeleton.PrintJoints();
 		}
@@ -275,9 +296,11 @@ LRESULT CALLBACK Application::DlgProc(HWND hWnd, UINT message, WPARAM wParam, LP
 		if (IDC_APPLY_TRANSFORM == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
 			Vector4 scale;
-			Vector4 translate;
-			ZeroMemory(&scale, sizeof(Vector4));
-			ZeroMemory(&translate, sizeof(Vector4));
+			Vector4 rotate;
+			scale.x = 1;
+			scale.y = 1;
+			scale.z = 1;
+			ZeroMemory(&rotate, sizeof(Vector4));
 
 			{
 				HWND hScale = GetDlgItem(m_hWnd, IDC_SCALE_VECTOR_VALUE);
@@ -288,15 +311,16 @@ LRESULT CALLBACK Application::DlgProc(HWND hWnd, UINT message, WPARAM wParam, LP
 				wiss >> scale.x >> scale.y >> scale.z;
 			}
 			{
-				HWND hTranslate = GetDlgItem(m_hWnd, IDC_TRANSLATE_VECTOR_VALUE);
-				wchar_t wcTranslate[EDIT_CONTROL_SIZE];
-				Edit_GetText(hTranslate, wcTranslate, EDIT_CONTROL_SIZE);
-				std::wstring sTranslate(wcTranslate);
-				std::wistringstream wiss(sTranslate);
-				wiss >> translate.x >> translate.y >> translate.z;
+				HWND hRotate = GetDlgItem(m_hWnd, IDC_ROTATE_VECTOR_VALUE);
+				wchar_t wcRotate[EDIT_CONTROL_SIZE];
+				Edit_GetText(hRotate, wcRotate, EDIT_CONTROL_SIZE);
+				std::wstring sRotate(wcRotate);
+				std::wistringstream wiss(sRotate);
+				wiss >> rotate.x >> rotate.y;
 			}
 
-			m_SimpleSkeleton2D.ApplyTransformations(scale, translate);
+			m_SimpleModel.ApplyTransformations(scale, rotate);
+			m_SimpleSkeleton3D.ApplyTransformations(scale, rotate);
 		}
 
 		// Convert hierarchical quaternions to axis-angle vectors and print to timestamped file
@@ -650,7 +674,8 @@ void Application::RenderSimpleModel()
 	m_pImmediateContext->ClearRenderTargetView(m_pRenderTargetView, DirectX::Colors::MidnightBlue);
 	m_pImmediateContext->ClearDepthStencilView(m_pDepthStencilView,	D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-	m_SimpleModel.Render(m_pImmediateContext, m_SimpleRotations, m_bOnline);
+	m_SimpleModel.Render(m_pImmediateContext, m_SimpleRotations, m_bTraceable3D);
+	m_bTraceable3D = false;
 
 	m_pSwapChain->Present(1, 0);
 }
@@ -661,7 +686,19 @@ void Application::RenderSimpleSkeleton3D()
 	m_pImmediateContext->ClearRenderTargetView(m_pRenderTargetView, DirectX::Colors::MidnightBlue);
 	m_pImmediateContext->ClearDepthStencilView(m_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
-	m_SimpleSkeleton3D.Render(m_pImmediateContext, m_SimpleRotations, m_bOnline);
+	m_SimpleSkeleton3D.Render(m_pImmediateContext, m_SimpleRotations, m_bTraceable3D);
+	m_bTraceable3D = false;
+
+	m_pSwapChain->Present(1, 0);
+}
+
+void Application::RenderKinectSkeleton3D()
+{
+	// Just clear the backbuffer
+	m_pImmediateContext->ClearRenderTargetView(m_pRenderTargetView, DirectX::Colors::MidnightBlue);
+	m_pImmediateContext->ClearDepthStencilView(m_pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+	m_bTraceable3D = false;
 
 	m_pSwapChain->Present(1, 0);
 }

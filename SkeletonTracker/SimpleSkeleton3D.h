@@ -12,7 +12,8 @@ public:
 	void Create(ID3D11Device* pd3dDevice, const std::wstring& vertexShaderFilename,
 		const std::wstring& geometryShaderFilename, const std::wstring& pixelShaderFilename, 
 		float aspectRatio);
-	void Render(ID3D11DeviceContext*, const SimpleRotations& rotations, bool online);
+	void Render(ID3D11DeviceContext*, const SimpleRotations& rotations, bool traceable);
+	void ApplyTransformations(Vector4 scaleXYZ, Vector4 rotateXY);
 	void Clear();
 
 private:
@@ -42,6 +43,7 @@ private:
 	// World/View/Perspective Matrices
 	ID3D11Buffer* m_pWVPMatricesConstantBuffer = nullptr;
 	WVPMatricesConstantBuffer m_WVPMatricesConstantBufferData;
+	DirectX::XMMATRIX m_World;
 	DirectX::XMMATRIX m_View;
 
 	// Linear Blend Skinning Matrices

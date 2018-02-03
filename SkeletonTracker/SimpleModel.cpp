@@ -104,13 +104,18 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilen
 			L"Could not create WVPMatricesConstantBuffer");
 	}
 
-	DirectX::XMFLOAT4 eye(0, -0.3, -2, 1);
+	DirectX::XMFLOAT4 eye(0, -0.3, 2, 1);
 	DirectX::XMFLOAT4 focus(0, -0.3, 0, 1);
 	DirectX::XMFLOAT4 up(0, 1, 0, 0);
 	m_View = DirectX::XMMatrixLookAtLH(DirectX::XMLoadFloat4(&eye),
 		DirectX::XMLoadFloat4(&focus),
 		DirectX::XMLoadFloat4(&up));
 
+	DirectX::XMStoreFloat4x4(&m_WVPMatricesConstantBufferData.worldView,
+		DirectX::XMMatrixTranspose(m_View));
+	DirectX::XMStoreFloat4x4(&m_WVPMatricesConstantBufferData.worldViewIT,
+		DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(nullptr,
+			DirectX::XMMatrixTranspose(m_View))));
 	DirectX::XMStoreFloat4x4(&m_WVPMatricesConstantBufferData.projection,
 		DirectX::XMMatrixTranspose(DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PIDIV2, aspectRatio, 0.001f, 10.0f)));
 
@@ -183,31 +188,29 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilen
 	delete[] posedirs;
 }
 
-void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext, const SimpleRotations& rotations, bool online)
+void SimpleModel::ApplyTransformations(Vector4 scaleXYZ, Vector4 rotateXY)
 {
-	static float degree = DirectX::XM_PI;
-	static float elapsed = 0.f;
-	static const float factor = 3;
-	static const float range = DirectX::XM_PIDIV2/3.f;
+	m_World = DirectX::XMMatrixScaling(scaleXYZ.x, scaleXYZ.y, scaleXYZ.z) *
+		DirectX::XMMatrixRotationY(rotateXY.y) * DirectX::XMMatrixRotationY(rotateXY.x);
+	DirectX::XMMATRIX transform = m_World * m_View;
+	DirectX::XMStoreFloat4x4(&m_WVPMatricesConstantBufferData.worldView, 
+		DirectX::XMMatrixTranspose(transform));
+	DirectX::XMStoreFloat4x4(&m_WVPMatricesConstantBufferData.worldViewIT,
+		DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(nullptr, 
+			DirectX::XMMatrixTranspose(transform))));
+}
 
-	// Update the constant buffer to rotate the cube model
-	DirectX::XMMATRIX transform = DirectX::XMMatrixScaling(1,1.5,1) * 
-		DirectX::XMMatrixRotationY(degree)*m_View;
-	DirectX::XMStoreFloat4x4(&m_WVPMatricesConstantBufferData.worldView, DirectX::XMMatrixTranspose(transform));
-	DirectX::XMStoreFloat4x4(&m_WVPMatricesConstantBufferData.worldViewIT, 
-		DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(nullptr, DirectX::XMMatrixTranspose(transform))));
-
-	degree += 0.05f;
-	//elapsed += 0.01f;
-
+void SimpleModel::Render(ID3D11DeviceContext* pd3dDeviceContext, 
+	const SimpleRotations& rotations, bool traceable)
+{
 	pd3dDeviceContext->UpdateSubresource(m_pWVPMatricesConstantBuffer, 0, nullptr, &m_WVPMatricesConstantBufferData, 0, 0);
 
-	if (!online) rotations.printThetas();
+	if (traceable) rotations.printThetas();
 
-	m_LBS.UpdateWithEigenSmplStyle(rotations, !online);
+	m_LBS.UpdateWithEigenSmplStyle(rotations, traceable);
 	pd3dDeviceContext->UpdateSubresource(m_pLBSConstantBuffer, 0, nullptr, m_LBS.getHierarchyConstantBuffer(), 0, 0);
 	
-	m_Pose.Update(rotations, !online);
+	m_Pose.Update(rotations, traceable);
 	{
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
 		ZeroMemory(&mappedResource, sizeof(D3D11_MAPPED_SUBRESOURCE));

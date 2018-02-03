@@ -53,7 +53,7 @@ void SimpleLBS::UpdateWithEigenSmplStyle(const SimpleRotations& rotations, bool 
 
 	if (traceable)
 	{
-		util::TempFile file("Skinning1");
+		util::TempFile file("Skinning1/");
 		for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
 		{
 			file << transform[i](0, 0) << " " << transform[i](0, 1) << " " << transform[i](0, 2) << " " << transform[i](0, 3) << L"\n";
@@ -72,7 +72,7 @@ void SimpleLBS::UpdateWithEigenSmplStyle(const SimpleRotations& rotations, bool 
 
 	if (traceable)
 	{
-		util::TempFile file("Skinning2");
+		util::TempFile file("Skinning2/");
 		for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
 		{
 			file << transform[i](0, 0) << " " << transform[i](0, 1) << " " << transform[i](0, 2) << " " << transform[i](0, 3) << L"\n";
@@ -84,7 +84,7 @@ void SimpleLBS::UpdateWithEigenSmplStyle(const SimpleRotations& rotations, bool 
 
 	if (traceable)
 	{
-		util::TempFile file("Skinning");
+		util::TempFile file("Skinning/");
 		for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
 		{
 			file << m_Transform[i]._11 << " " << m_Transform[i]._12 << " " << m_Transform[i]._13 << " " << m_Transform[i]._14 << L"\n";
@@ -121,7 +121,7 @@ void SimpleLBS::UpdateWithDirectXSmplStyle(const SimpleRotations& rotations, boo
 
 	if (traceable)
 	{
-		util::TempFile file("Skinning1");
+		util::TempFile file("Skinning1/");
 		for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
 		{
 			file << m_Transform[i]._11 << " " << m_Transform[i]._12 << " " << m_Transform[i]._13 << " " << m_Transform[i]._14 << L"\n";
@@ -166,7 +166,7 @@ void SimpleLBS::UpdateWithDirectXSmplStyle(const SimpleRotations& rotations, boo
 
 	if (traceable)
 	{
-		util::TempFile file("Skinning");
+		util::TempFile file("Skinning/");
 		for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
 		{
 			file << m_Transform[i]._11 << " " << m_Transform[i]._12 << " " << m_Transform[i]._13 << " " << m_Transform[i]._14 << L"\n";
@@ -203,7 +203,7 @@ void SimpleLBS::UpdateWithDirectX(const SimpleRotations& rotations, bool traceab
 
 	if (traceable)
 	{
-		util::TempFile file("Skinning");
+		util::TempFile file("Skinning/");
 		for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
 		{
 			file << m_Transform[i]._11 << " " << m_Transform[i]._12 << " " << m_Transform[i]._13 << " " << m_Transform[i]._14 << L"\n";
@@ -236,7 +236,7 @@ void SimpleLBS::UpdateWithEigen(const SimpleRotations& rotations, bool traceable
 
 	if (traceable)
 	{
-		util::TempFile file("Skinning");
+		util::TempFile file("Skinning/");
 		for (int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
 		{
 			file << m_Transform[i]._11 << " " << m_Transform[i]._12 << " " << m_Transform[i]._13 << " " << m_Transform[i]._14 << L"\n";
