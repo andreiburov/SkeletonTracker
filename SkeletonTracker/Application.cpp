@@ -715,7 +715,9 @@ void Application::PassRotationsFromKinectToSimple()
 {
 	for (unsigned int i = 0; i < SMPL_SKELETON_POSITION_COUNT; i++)
 	{
-		m_SimpleRotations[(_SMPL_SKELETON_POSITION_INDEX)i] = m_KinectRotations[(_SMPL_SKELETON_POSITION_INDEX)i];
+		m_SimpleRotations[(_SMPL_SKELETON_POSITION_INDEX)i] = DirectX::XMQuaternionSlerp(
+			m_SimpleRotations[(_SMPL_SKELETON_POSITION_INDEX)i], 
+			m_KinectRotations[(_SMPL_SKELETON_POSITION_INDEX)i], 0.35);
 	}
 }
 

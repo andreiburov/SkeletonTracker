@@ -26,9 +26,7 @@ namespace util {
 
 	DirectX::XMVECTOR QUATERNION(Vector4 v)
 	{
-		//return DirectX::XMVectorSet(-v.x, -v.y, v.z, v.w);
 		return DirectX::XMVectorSet(-v.x, -v.y, -v.z, v.w);
-		//return DirectX::XMQua
 	}
 
 	Eigen::Quaterniond QUATERNION(float x, float y, float z, float w)
