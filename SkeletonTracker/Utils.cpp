@@ -200,7 +200,9 @@ namespace util {
 			DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(v1))
 			*DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(v2))
 		) + DirectX::XMVectorGetX(DirectX::XMVector3Dot(v1, v2));
-		return DirectX::XMQuaternionNormalize(DirectX::XMVectorSetW(q, w));
+		q = DirectX::XMQuaternionNormalize(DirectX::XMVectorSetW(q, w));
+		float temp = DirectX::XMVectorGetZ(q);
+		return DirectX::XMVectorSetZ(q, -temp); // flip z
 	}
 
 	std::wostream& operator<<(std::wostream& out, const Vec4& v)

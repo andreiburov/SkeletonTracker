@@ -11,6 +11,7 @@ Skinning1/
 Skinning2/
 Thetas/
 Eigen/
+enc_temp_folder/
 
 # Compiled Shader Object
 *.cso
