@@ -108,18 +108,26 @@ namespace util {
 	DirectX::XMVECTOR RotationBetweenQuaternions(Vector4 _tPose, Vector4 _posed)
 	{
 		DirectX::XMFLOAT4 a, b;
-		a.x = -_tPose.x;
-		a.y = -_tPose.y;
-		a.z = -_tPose.z;
+		a.x = _tPose.x;
+		a.y = _tPose.y;
+		a.z = _tPose.z;
 		a.w = _tPose.w;
 
-		b.x = -_posed.x;
-		b.y = -_posed.y;
-		b.z = -_posed.z;
+		b.x = _posed.x;
+		b.y = _posed.y;
+		b.z = _posed.z;
 		b.w = _posed.w;
 
 		DirectX::XMVECTOR tPose = DirectX::XMQuaternionNormalize(DirectX::XMLoadFloat4(&a));
 		DirectX::XMVECTOR posed = DirectX::XMQuaternionNormalize(DirectX::XMLoadFloat4(&b));
+		DirectX::XMVECTOR modifiedPosed = EnsureQuaternionNeighborhood(tPose, posed);
+		return DirectX::XMQuaternionNormalize(DirectX::XMQuaternionMultiply(DirectX::XMQuaternionInverse(tPose), posed));
+	}
+
+	DirectX::XMVECTOR RotationBetweenQuaternions(DirectX::XMVECTOR _t, DirectX::XMVECTOR _p)
+	{
+		DirectX::XMVECTOR tPose = DirectX::XMQuaternionNormalize(_t);
+		DirectX::XMVECTOR posed = DirectX::XMQuaternionNormalize(_p);
 		DirectX::XMVECTOR modifiedPosed = EnsureQuaternionNeighborhood(tPose, posed);
 		return DirectX::XMQuaternionNormalize(DirectX::XMQuaternionMultiply(DirectX::XMQuaternionInverse(tPose), posed));
 	}
@@ -171,7 +179,7 @@ namespace util {
 		return out;
 	}
 
-	Vector4 ThreePositionsToQuaternion(Vector4 child, Vector4 joint, Vector4 parent)
+	DirectX::XMVECTOR ThreePositionsToQuaternion(Vector4 child, Vector4 joint, Vector4 parent)
 	{
 		DirectX::XMVECTOR q;
 		//child bone, parent bone
@@ -184,7 +192,7 @@ namespace util {
 
 		if (DirectX::XMVectorGetX(DirectX::XMVector3Dot(v1, v2)) > 0.999999) 
 		{
-			q = DirectX::XMQuaternionIdentity();
+			return DirectX::XMQuaternionIdentity();
 		}
 
 		q = DirectX::XMVector3Cross(v1, v2); // axis
@@ -192,10 +200,7 @@ namespace util {
 			DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(v1))
 			*DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(v2))
 		) + DirectX::XMVectorGetX(DirectX::XMVector3Dot(v1, v2));
-		q = DirectX::XMQuaternionNormalize(DirectX::XMVectorSetW(q, w));
-		DirectX::XMFLOAT4 _q;
-		DirectX::XMStoreFloat4(&_q, q);
-		return VECTOR4(_q.x, _q.y, _q.z, _q.w);
+		return DirectX::XMQuaternionNormalize(DirectX::XMVectorSetW(q, w));
 	}
 
 	std::wostream& operator<<(std::wostream& out, const Vec4& v)

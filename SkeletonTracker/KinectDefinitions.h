@@ -1,24 +1,21 @@
 #pragma once
 
-const char* KINECT_NAME_FROM_INDEX[NUI_SKELETON_POSITION_COUNT] = {
-	"HIP_CENTER",
-	"SPINE",
-	"SHOULDER_CENTER",
-	"HEAD",
-	"SHOULDER_LEFT",
-	"ELBOW_LEFT",
-	"WRIST_LEFT",
-	"HAND_LEFT",
-	"SHOULDER_RIGHT",
-	"ELBOW_RIGHT",
-	"WRIST_RIGHT",
-	"HAND_RIGHT",
-	"HIP_LEFT",
-	"KNEE_LEFT",
-	"ANKLE_LEFT",
-	"FOOT_LEFT",
-	"HIP_RIGHT",
-	"KNEE_RIGHT",
-	"ANKLE_RIGHT",
-	"FOOT_RIGHT"
+struct KinectJoint {
+	int parent;
+	int joint;
+	int child;
+	int smpl;
+
+	KinectJoint(int p, int j, int c, int s) : parent(p), joint(j), child(c), smpl(s) {}
+};
+
+#define KINECT_ROTATIONS_COUNT 19
+
+struct KinectRotations {
+	DirectX::XMVECTOR rotations[KINECT_ROTATIONS_COUNT];
+	KinectJoint hierarchy[KINECT_ROTATIONS_COUNT];
+
+	KinectRotations();
+
+	void printQuaternions() const;
 };
