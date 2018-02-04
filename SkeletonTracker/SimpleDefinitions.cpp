@@ -4,6 +4,33 @@
 
 using namespace DirectX;
 
+const char* SMPL_NAME_FROM_INDEX[SMPL_SKELETON_POSITION_COUNT] = {
+	"HIP_CENTER",
+	"HIP_RIGHT",
+	"HIP_LEFT",
+	"STOMACH",
+	"KNEE_RIGHT",
+	"KNEE_LEFT",
+	"BACKBONE",
+	"ANKLE_RIGHT",
+	"ANKLE_LEFT",
+	"CHEST",
+	"FOOT_RIGHT",
+	"FOOT_LEFT",
+	"SHOULDER_CENTER",
+	"PECK_RIGHT",
+	"PECK_LEFT",
+	"CHIN",
+	"SHOULDER_RIGHT",
+	"SHOULDER_LEFT",
+	"ELBOW_RIGHT",
+	"ELBOW_LEFT",
+	"WRIST_RIGHT",
+	"WRIST_LEFT",
+	"HAND_RIGHT",
+	"HAND_LEFT",
+};
+
 // SimpleRotations encapsulate thetas from SMPL paper
 
 SimpleRotations::SimpleRotations()
@@ -47,6 +74,14 @@ void SimpleRotations::printThetas() const
 		{
 			file << " ]\n";
 		}
+	}
+	for (int i = 0; i < N; i++)
+	{
+		XMFLOAT3 t;
+		XMVECTOR theta = util::AxisAngle3FromQuaternion(rotations[(SMPL_SKELETON_POSITION_INDEX)i]);
+
+		XMStoreFloat3(&t, theta);
+		file << SMPL_NAME_FROM_INDEX[i] << " " << t.x << ", " << t.y << ", " << t.z << "\n";
 	}
 }
 

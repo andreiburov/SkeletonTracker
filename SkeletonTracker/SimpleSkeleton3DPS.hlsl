@@ -1,6 +1,6 @@
 #include "SimpleSkeleton3D.hlsli"
 
-float4 main() : SV_TARGET
+float4 main(PixelShaderInput input) : SV_TARGET
 {
-	return float4(0.0f, 0.0f, 0.0f, 1.0f);
+	return input.col;
 }

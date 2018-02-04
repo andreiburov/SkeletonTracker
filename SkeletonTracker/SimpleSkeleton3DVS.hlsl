@@ -19,5 +19,6 @@ GeometryShaderInput main(VertexShaderInput input, uint id : SV_VertexID)
 	float4 pos = float4(input.pos, 1.f);
 	output.res = pos;
 	output.pos = mul(pos, transform[id]);
+	output.axisAngle = input.axisAngle;
 	return output;
 }

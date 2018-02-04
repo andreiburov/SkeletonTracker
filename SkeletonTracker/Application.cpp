@@ -23,6 +23,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 Application::Application() :
 	m_bOnline(false),
+	m_bInterruptKinect(false),
 	m_bRenderModel(true),
 	m_bRenderSkeleton3D(false),
 	m_bRenderKinect3D(false),
@@ -39,6 +40,7 @@ Application::Application() :
 	m_SimpleSkeleton2D(),
 	m_KinectSkeleton()
 {
+	m_KinectFrame = { 0 };
 }
 
 Application::~Application()
@@ -241,6 +243,12 @@ LRESULT CALLBACK Application::DlgProc(HWND hWnd, UINT message, WPARAM wParam, LP
 		// Handle button press
 	case WM_COMMAND:
 
+		// Toggle Kinect to interrupt fashion
+		if (IDC_INTERRUPT == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
+		{
+			m_bInterruptKinect = !m_bInterruptKinect;
+		}
+
 		// Toggle traceable rotations to online
 		if (IDC_ONLINE == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
@@ -289,7 +297,7 @@ LRESULT CALLBACK Application::DlgProc(HWND hWnd, UINT message, WPARAM wParam, LP
 		// Print the joints to the local timestamped file
 		if (IDC_NEXT_FRAME == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
 		{
-			m_KinectSkeleton.PrintJoints();
+			if (m_bInterruptKinect) m_KinectSkeleton.Update(m_KinectFrame, true);
 		}
 
 		// Get the transform and apply it to SimpleSkeleton2D (blue skeleton)
@@ -321,12 +329,6 @@ LRESULT CALLBACK Application::DlgProc(HWND hWnd, UINT message, WPARAM wParam, LP
 
 			m_SimpleModel.ApplyTransformations(scale, rotate);
 			m_SimpleSkeleton3D.ApplyTransformations(scale, rotate);
-		}
-
-		// Convert hierarchical quaternions to axis-angle vectors and print to timestamped file
-		if (IDC_PRINT_ROTATIONS == LOWORD(wParam) && BN_CLICKED == HIWORD(wParam))
-		{
-			m_KinectSkeleton.PrintSimplePose();
 		}
 
 		// Store kinect hierarchical orientations for the T pose
@@ -405,23 +407,35 @@ HRESULT Application::CreateFirstConnected()
 /// </summary>
 void Application::ProcessSkeleton()
 {
-	RECT rct;
-	GetClientRect(GetDlgItem(m_hWnd, IDC_VIEW_ONE), &rct);
-	int width = rct.right;
-	int height = rct.bottom;
-
-	NUI_SKELETON_FRAME skeletonFrame = { 0 };
-	HRESULT hr = m_pNuiSensor->NuiSkeletonGetNextFrame(0, &skeletonFrame);
+	HRESULT hr = m_pNuiSensor->NuiSkeletonGetNextFrame(0, &m_KinectFrame);
 	if (FAILED(hr))
 	{
 		return;
 	}
 
 	// smooth out the skeleton data
-	m_pNuiSensor->NuiTransformSmooth(&skeletonFrame, NULL);
+	m_pNuiSensor->NuiTransformSmooth(&m_KinectFrame, NULL);
+	if (!m_bInterruptKinect)
+	{
+		m_KinectSkeleton.Update(m_KinectFrame, false);
+	}
+	RenderSkeletons2D();
+
+	if (m_KinectSkeleton.isTposeCalibrated())
+	{
+		m_KinectSkeleton.GetSimplePose(m_KinectRotations);
+	}
+}
+
+void Application::RenderSkeletons2D()
+{
+	RECT rct;
+	GetClientRect(GetDlgItem(m_hWnd, IDC_VIEW_ONE), &rct);
+	int width = rct.right;
+	int height = rct.bottom;
 
 	// Endure Direct2D is ready to draw
-	hr = EnsureDirect2DResources();
+	HRESULT hr = EnsureDirect2DResources();
 	if (FAILED(hr))
 	{
 		return;
@@ -430,7 +444,7 @@ void Application::ProcessSkeleton()
 	m_pRenderTarget->BeginDraw();
 	m_pRenderTarget->Clear();
 
-	m_SimpleSkeleton2D.Render(m_pRenderTarget, m_pBrushJointSimple, m_pBrushBoneSimple, width, height);
+	//m_SimpleSkeleton2D.Render(m_pRenderTarget, m_pBrushJointSimple, m_pBrushBoneSimple, width, height);
 
 	KinectSkeleton::RenderHelper helper;
 	helper.pRenderTarget = m_pRenderTarget;
@@ -438,7 +452,6 @@ void Application::ProcessSkeleton()
 	helper.pBrushBoneTracked = m_pBrushBoneTracked;
 	helper.pBrushJointInferred = m_pBrushJointInferred;
 	helper.pBrushJointTracked = m_pBrushJointTracked;
-	helper.pSkeletonFrame = &skeletonFrame;
 	helper.windowWidth = width;
 	helper.windowHeight = height;
 	m_KinectSkeleton.Render(helper);
@@ -451,11 +464,6 @@ void Application::ProcessSkeleton()
 	{
 		hr = S_OK;
 		DiscardDirect2DResources();
-	}
-
-	if (m_KinectSkeleton.isTposeCalibrated())
-	{
-		m_KinectSkeleton.GetSimplePose(m_KinectRotations);
 	}
 }
 

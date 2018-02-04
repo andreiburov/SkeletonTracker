@@ -160,6 +160,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="KinectDefinitions.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SimpleDefinitions.h" />
     <ClInclude Include="SimpleLBS.h" />

@@ -191,7 +191,7 @@ void SimpleModel::Create(ID3D11Device* pd3dDevice, const std::string& modelFilen
 void SimpleModel::ApplyTransformations(Vector4 scaleXYZ, Vector4 rotateXY)
 {
 	m_World = DirectX::XMMatrixScaling(scaleXYZ.x, scaleXYZ.y, scaleXYZ.z) *
-		DirectX::XMMatrixRotationY(rotateXY.y) * DirectX::XMMatrixRotationY(rotateXY.x);
+		DirectX::XMMatrixRotationY(rotateXY.y) * DirectX::XMMatrixRotationX(rotateXY.x);
 	DirectX::XMMATRIX transform = m_World * m_View;
 	DirectX::XMStoreFloat4x4(&m_WVPMatricesConstantBufferData.worldView, 
 		DirectX::XMMatrixTranspose(transform));

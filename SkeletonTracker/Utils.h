@@ -26,6 +26,10 @@ namespace util {
 	float Length(Vector4 v);
 	Vector4 Normalize(Vector4 v);
 
+	Vector4 ThreePositionsToQuaternion(Vector4 child, Vector4 joint, Vector4 parent);
+
+	DirectX::XMVECTOR RotationBetweenQuaternions(Vector4 tPose, Vector4 posed);
+
 	Vector4 AxisAngleFromQuaternion(Vector4 q);
 	DirectX::XMVECTOR AxisAngle3FromQuaternion(const DirectX::XMVECTOR quaternion);
 	DirectX::XMFLOAT4 AxisAngle4FromQuaternion(const DirectX::XMVECTOR quaternion);

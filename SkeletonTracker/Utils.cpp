@@ -28,6 +28,7 @@ namespace util {
 	{
 		//return DirectX::XMVectorSet(-v.x, -v.y, v.z, v.w);
 		return DirectX::XMVectorSet(-v.x, -v.y, -v.z, v.w);
+		//return DirectX::XMQua
 	}
 
 	Eigen::Quaterniond QUATERNION(float x, float y, float z, float w)
@@ -94,6 +95,35 @@ namespace util {
 		return VECTOR4(v.x * s, v.y * s, v.z * s, 1);
 	}
 
+	DirectX::XMVECTOR EnsureQuaternionNeighborhood(DirectX::XMVECTOR a, DirectX::XMVECTOR b)
+	{
+		if (DirectX::XMVectorGetX(DirectX::XMQuaternionDot(a, b)) < 0)
+		{
+			return DirectX::XMVectorScale(b, -1.f);
+		}
+		return b;
+	}
+
+	// return R : _tPose*R = _posed
+	DirectX::XMVECTOR RotationBetweenQuaternions(Vector4 _tPose, Vector4 _posed)
+	{
+		DirectX::XMFLOAT4 a, b;
+		a.x = -_tPose.x;
+		a.y = -_tPose.y;
+		a.z = -_tPose.z;
+		a.w = _tPose.w;
+
+		b.x = -_posed.x;
+		b.y = -_posed.y;
+		b.z = -_posed.z;
+		b.w = _posed.w;
+
+		DirectX::XMVECTOR tPose = DirectX::XMQuaternionNormalize(DirectX::XMLoadFloat4(&a));
+		DirectX::XMVECTOR posed = DirectX::XMQuaternionNormalize(DirectX::XMLoadFloat4(&b));
+		DirectX::XMVECTOR modifiedPosed = EnsureQuaternionNeighborhood(tPose, posed);
+		return DirectX::XMQuaternionNormalize(DirectX::XMQuaternionMultiply(DirectX::XMQuaternionInverse(tPose), posed));
+	}
+
 	// http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToAngle/index.htm
 
 	Vector4 AxisAngleFromQuaternion(Vector4 q)
@@ -120,7 +150,7 @@ namespace util {
 		DirectX::XMVECTOR axis;
 		float angle;
 
-		DirectX::XMQuaternionToAxisAngle(&axis, &angle, quaternion);
+		DirectX::XMQuaternionToAxisAngle(&axis, &angle, DirectX::XMQuaternionNormalize(quaternion));
 		axis = DirectX::XMVector3Normalize(axis);
 		while (angle < 0) angle += DirectX::XM_2PI;
 		while (angle > DirectX::XM_2PI) angle -= DirectX::XM_2PI;
@@ -141,9 +171,36 @@ namespace util {
 		return out;
 	}
 
+	Vector4 ThreePositionsToQuaternion(Vector4 child, Vector4 joint, Vector4 parent)
+	{
+		DirectX::XMVECTOR q;
+		//child bone, parent bone
+		DirectX::XMVECTOR v1 = DirectX::XMVectorSubtract(
+			DirectX::XMVectorSet(child.x, child.y, child.z, 1.f),
+			DirectX::XMVectorSet(joint.x, joint.y, joint.z, 1.f));
+		DirectX::XMVECTOR v2 = DirectX::XMVectorSubtract(
+			DirectX::XMVectorSet(joint.x, joint.y, joint.z, 1.f),
+			DirectX::XMVectorSet(parent.x, parent.y, parent.z, 1.f));
+
+		if (DirectX::XMVectorGetX(DirectX::XMVector3Dot(v1, v2)) > 0.999999) 
+		{
+			q = DirectX::XMQuaternionIdentity();
+		}
+
+		q = DirectX::XMVector3Cross(v1, v2); // axis
+		float w = sqrt(
+			DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(v1))
+			*DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(v2))
+		) + DirectX::XMVectorGetX(DirectX::XMVector3Dot(v1, v2));
+		q = DirectX::XMQuaternionNormalize(DirectX::XMVectorSetW(q, w));
+		DirectX::XMFLOAT4 _q;
+		DirectX::XMStoreFloat4(&_q, q);
+		return VECTOR4(_q.x, _q.y, _q.z, _q.w);
+	}
+
 	std::wostream& operator<<(std::wostream& out, const Vec4& v)
 	{
-		out << v.x << L" " << v.y << L" " << v.z << L" " << v.z;
+		out << v.x << L", " << v.y << L", " << v.z << L", " << v.w;
 		return out;
 	}
 

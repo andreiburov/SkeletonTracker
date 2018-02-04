@@ -46,6 +46,7 @@ private:
 	// Windows Interface
 	HWND                     m_hWnd;
 	bool					 m_bOnline;
+	bool                     m_bInterruptKinect;
 	bool                     m_bRenderModel;
 	bool                     m_bRenderSkeleton3D;
 	bool                     m_bRenderKinect3D;
@@ -80,9 +81,11 @@ private:
 
 	HANDLE                   m_hNextSkeletonEvent;
 
+	NUI_SKELETON_FRAME		 m_KinectFrame; // Captured data is stored here
 	SimpleRotations          m_KinectRotations;
 	KinectSkeleton           m_KinectSkeleton;
 	SimpleSkeleton2D         m_SimpleSkeleton2D;
+
 	SimpleRotations          m_SimpleRotations;
 	SimpleModel              m_SimpleModel;
 	SimpleSkeleton3D         m_SimpleSkeleton3D;
@@ -100,7 +103,7 @@ private:
 	/// Handle new skeleton data
 	/// </summary>
 	void                    ProcessSkeleton();
-
+	void                    RenderSkeletons2D();
 	void                    PassRotationsFromKinectToSimple();
 	
 	// Direct3D
